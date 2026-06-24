@@ -1,4 +1,6 @@
 """방화벽 관리 대시보드 API (FastAPI)."""
+from __future__ import annotations   # str | None 문법을 구버전 파이썬에서도 허용
+
 import sqlite3
 from datetime import datetime, date
 

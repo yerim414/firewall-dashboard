@@ -44,14 +44,66 @@ python run.py                     # http://localhost:8414  (API 문서: /docs)
 
 > ⚠️ 화면은 반드시 **http://localhost:8414** 로 접속하세요. `index.html` 을 파일(`file://`)로 직접 열면 `fetch('/api/...')` 가 동작하지 않습니다.
 
-## PM2
+## 리눅스 서버 배포
+
+> Python **3.10+** 권장.
 
 ```bash
+# 0) 사전 패키지 (Ubuntu/Debian 기준)
+sudo apt update
+sudo apt install -y python3 python3-venv python3-pip git
+
+# 1) clone
+git clone https://github.com/yerim414/firewall-dashboard.git
+cd firewall-dashboard
+
+# 2) 가상환경 + 의존성
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 3) (선택) 데모 데이터 — 빈 상태로 시작하려면 생략
+python seed.py
+
+# 4) 암호화 키 고정 (운영 권장: 재시작해도 비밀 복호화 유지)
+export FW_SECRET_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+echo "FW_SECRET_KEY=$FW_SECRET_KEY"   # 이 값을 보관해 두고 항상 같은 값으로 주입
+
+# 5) 실행 (테스트)
+python run.py                         # 0.0.0.0:8414
+```
+
+접속: `http://<서버IP>:8414` — 방화벽에서 포트 개방 필요:
+```bash
+sudo ufw allow 8414/tcp
+```
+
+### PM2 로 상시 구동 (권장)
+
+```bash
+# Node.js + PM2 설치
+sudo apt install -y nodejs npm
+sudo npm install -g pm2
+
+# ecosystem.config.js 에서 interpreter 를 venv python 으로 바꾸고
+#   interpreter: "./.venv/bin/python"
+# 두 앱 env 에 FW_SECRET_KEY 를 동일하게 추가 (api·poller 가 같은 키를 써야 함)
+
 pm2 start ecosystem.config.js     # fw-api + fw-poller
 pm2 logs
-pm2 save && pm2 startup           # 부팅 시 자동 시작
+pm2 save && pm2 startup           # 출력되는 명령을 복붙하면 부팅 시 자동 시작
 ```
-> 가상환경을 쓰면 `ecosystem.config.js` 의 `interpreter` 를 venv python 경로로 바꾸세요.
+
+### 업데이트
+
+```bash
+git pull
+source .venv/bin/activate && pip install -r requirements.txt
+pm2 restart all
+```
+
+> 실제 장비 상태를 ping 으로 확인하려면 `FW_PING_MODE=tcp` (기본은 데모용 `mock`).
+> 외부 노출 시 nginx 리버스 프록시로 80/443 + HTTPS 뒤에 두는 것을 권장합니다.
 
 ## 주요 API
 
