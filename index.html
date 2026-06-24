@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>방화벽 관리</title>
+<style>
+  :root {
+    --bg: #f5f6fb;
+    --card: #ffffff;
+    --line: #eceaf3;
+    --text: #2b2b3a;
+    --muted: #9a9aae;
+    --primary: #6c5ce7;
+    --primary-2: #5a4bd6;
+    --primary-soft: #f0ecfe;
+    --ok: #1bbf83;        --ok-soft: #e3f8f0;
+    --warn: #f0a13a;      --warn-soft: #fdf1e0;
+    --down: #f2576b;      --down-soft: #fde8ec;
+    --radius: 16px;
+    --radius-sm: 11px;
+    --shadow: 0 8px 28px rgba(31,28,74,.06);
+    --shadow-sm: 0 3px 12px rgba(31,28,74,.05);
+    --chip: #f3f3f8;
+    --hover: #f7f7fb;
+  }
+
+  /* ── 다크모드 ── */
+  body.dark {
+    --bg: #14141c;
+    --card: #1e1e29;
+    --line: #2c2c3a;
+    --text: #e7e7f0;
+    --muted: #8a8a9e;
+    --primary: #8b7cf0;
+    --primary-2: #9c8ef5;
+    --primary-soft: #2a2540;
+    --ok: #2ed29a;        --ok-soft: #14322a;
+    --warn: #f0a13a;      --warn-soft: #3a2c16;
+    --down: #f2576b;      --down-soft: #3a1d24;
+    --shadow: 0 8px 28px rgba(0,0,0,.35);
+    --shadow-sm: 0 3px 12px rgba(0,0,0,.3);
+    --chip: #2a2a38;
+    --hover: #262633;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Pretendard', -apple-system, 'Malgun Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    transition: background .2s, color .2s;
+  }
+  h1, h2, h3 { margin: 0; }
+  a { color: inherit; }
+
+  /* ── 앱 셸 ── */
+  .app { display: flex; min-height: 100vh; }
+
+  /* 좌측 사이드바 */
+  .sidebar {
+    width: 232px; flex-shrink: 0; background: var(--card);
+    padding: 22px 16px; display: flex; flex-direction: column;
+    position: sticky; top: 0; height: 100vh;
+    border-right: 1px solid var(--line);
+    transition: width .2s, padding .2s;
+  }
+  /* 접힌 상태 (아이콘만) */
+  body.sidebar-collapsed .sidebar { width: 70px; padding-left: 12px; padding-right: 12px; }
+  body.sidebar-collapsed .nl { display: none; }
+  body.sidebar-collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; gap: 0; }
+  body.sidebar-collapsed .brand { justify-content: center; padding-left: 0; padding-right: 0; }
+  body.sidebar-collapsed #collapseIcon { transform: rotate(180deg); }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 6px 10px 22px; }
+  .brand .logo {
+    width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--primary), #9b8cf2);
+    display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 15px;
+  }
+  .brand .brand-name { font-weight: 700; font-size: 16px; }
+  .nav { display: flex; flex-direction: column; gap: 4px; }
+  .nav-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); }
+  .nav-item {
+    display: flex; align-items: center; gap: 11px; padding: 11px 13px; border-radius: 11px;
+    color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none;
+    border: none; background: none; width: 100%; text-align: left; font-family: inherit;
+  }
+  .nav-item .ni { width: 20px; text-align: center; font-size: 16px; }
+  .nav-item:hover { background: var(--hover); color: var(--text); }
+  .nav-item.active { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+
+  /* 우측 콘텐츠 */
+  .content { flex: 1; min-width: 0; padding: 26px 34px 60px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .topbar h1 { font-size: 23px; }
+  .topbar .sub { color: var(--muted); font-size: 13px; margin-top: 5px; }
+  .btn {
+    background: var(--primary); color: #fff; border: none; border-radius: 11px;
+    padding: 11px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 6px 16px rgba(108,92,231,.28);
+  }
+  .btn:hover { background: var(--primary-2); }
+
+  .view[hidden] { display: none; }
+
+  /* ── 공통 카드 ── */
+  .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+  /* ── KPI ── */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 18px; }
+  .kpi { padding: 20px; cursor: pointer; transition: transform .12s, box-shadow .12s; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(31,28,74,.10); }
+  .kpi.sel { outline: 2px solid var(--primary); outline-offset: -2px; }
+  .kpi-top { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 13px; font-weight: 500; }
+  .kpi-ic { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; background: var(--chip); }
+  .kpi-n { font-size: 32px; font-weight: 700; line-height: 1; margin: 14px 0; font-variant-numeric: tabular-nums; }
+  .kpi-bar { height: 7px; border-radius: 5px; background: var(--chip); overflow: hidden; }
+  .kpi-bar i { display: block; height: 100%; border-radius: 5px; background: var(--primary); transition: width .3s; }
+  .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .kpi.ok   .kpi-n { color: var(--ok); }   .kpi.ok   .kpi-ic { background: var(--ok-soft); }   .kpi.ok   .kpi-bar i { background: var(--ok); }
+  .kpi.warn .kpi-n { color: var(--warn); } .kpi.warn .kpi-ic { background: var(--warn-soft); } .kpi.warn .kpi-bar i { background: var(--warn); }
+  .kpi.down .kpi-n { color: var(--down); } .kpi.down .kpi-ic { background: var(--down-soft); } .kpi.down .kpi-bar i { background: var(--down); }
+
+  /* ── 대시보드 그리드 ── */
+  .dash-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 18px; }
+  .panel { padding: 20px 22px; }
+  .panel h3 { font-size: 15px; margin-bottom: 16px; }
+  .panel h3 .hint { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 6px; }
+
+  /* 막대 */
+  .bar-row { display: flex; align-items: center; gap: 12px; padding: 7px 0; }
+  .bar-label { width: 96px; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 9px; background: var(--chip); border-radius: 6px; overflow: hidden; }
+  .bar-track i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--primary), #9b8cf2); }
+  .bar-val { width: 30px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* 주의 필요 리스트 */
+  .attn { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 11px; cursor: pointer; }
+  .attn:hover { background: var(--hover); }
+  .attn-name { font-weight: 600; }
+  .attn-ip { color: var(--muted); font-family: 'Consolas', monospace; font-size: 12px; }
+  .attn-meta { margin-left: auto; color: var(--muted); font-size: 12px; }
+
+  /* ── 도넛 (통계) ── */
+  .donut-wrap { display: flex; align-items: center; gap: 28px; }
+  .donut { width: 168px; height: 168px; border-radius: 50%; position: relative; flex-shrink: 0; }
+  .donut::after { content: ''; position: absolute; inset: 24px; background: var(--card); border-radius: 50%; }
+  .donut-c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; }
+  .donut-c b { font-size: 30px; }
+  .donut-c span { font-size: 12px; color: var(--muted); }
+  .legend { display: flex; flex-direction: column; gap: 12px; }
+  .legend .li { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+  .legend .sw { width: 12px; height: 12px; border-radius: 4px; }
+  .legend .lv { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+
+  /* ── 2단(트리+본문) ── */
+  .row-2col { display: flex; gap: 18px; align-items: flex-start; }
+  .tree { width: 230px; flex-shrink: 0; padding: 10px; position: sticky; top: 20px; }
+  .col { flex: 1; min-width: 0; }
+  .tree .titlebar { font-size: 11px; color: var(--muted); padding: 8px 10px 6px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .tnode { display: flex; align-items: center; gap: 4px; padding: 9px 10px; border-radius: 9px; cursor: pointer; font-size: 14px; }
+  .tnode:hover { background: var(--hover); }
+  .tnode.active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+  .tnode .caret { width: 16px; text-align: center; font-size: 10px; color: var(--muted); flex-shrink: 0; transition: transform .15s; }
+  .tnode .caret.open { transform: rotate(90deg); }
+  .tnode .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tnode .cnt { background: var(--chip); color: var(--muted); border-radius: 10px; padding: 1px 9px; font-size: 12px; font-weight: 600; }
+  .tnode.active .cnt { background: var(--card); color: var(--primary); }
+  .tchildren { margin-left: 14px; border-left: 1px solid var(--line); padding-left: 4px; display: none; }
+  .tchildren.open { display: block; }
+  .tchild { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  .tchild:hover { background: var(--hover); }
+  .tchild .ca { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tchild .cip { color: var(--muted); font-family: 'Consolas', monospace; font-size: 12px; flex-shrink: 0; }
+
+  /* ── 툴바 ── */
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 14px 16px; margin-bottom: 16px; }
+  .search { position: relative; flex: 1; min-width: 220px; }
+  .search input {
+    width: 100%; padding: 11px 14px 11px 38px; border: 1px solid var(--line);
+    border-radius: 11px; font-size: 14px; outline: none; background: var(--bg); color: var(--text);
+  }
+  .search input:focus { border-color: var(--primary); background: var(--card); }
+  .search .ic { position: absolute; left: 13px; top: 11px; color: var(--muted); }
+  select {
+    padding: 11px 13px; border: 1px solid var(--line); border-radius: 11px;
+    font-size: 14px; background: var(--card); color: var(--text); cursor: pointer; outline: none;
+  }
+  .ghost {
+    background: var(--card); color: var(--text); border: 1px solid var(--line);
+    border-radius: 11px; padding: 10px 15px; font-size: 14px; cursor: pointer; font-weight: 500;
+  }
+  .ghost:hover { background: var(--hover); }
+  .ghost:disabled { opacity: .45; cursor: default; }
+  .ghost:disabled:hover { background: var(--card); }
+  .ghost.sm { padding: 7px 12px; font-size: 13px; border-radius: 9px; }
+
+  /* ── 테이블 ── */
+  .tablebox { overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 14px 18px; }
+  thead th {
+    color: var(--muted); font-size: 12px; font-weight: 600;
+    border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  thead th:hover { color: var(--text); }
+  thead th .arr { opacity: .4; font-size: 10px; }
+  thead th.sorted { color: var(--text); }
+  thead th.sorted .arr { opacity: 1; color: var(--primary); }
+  tbody tr { border-top: 1px solid var(--line); cursor: pointer; }
+  tbody tr:first-child { border-top: none; }
+  tbody tr:hover { background: var(--hover); }
+  td.id { color: var(--muted); font-variant-numeric: tabular-nums; }
+  td.ip { font-family: 'Consolas', monospace; font-size: 13px; }
+  td.ver { color: var(--muted); font-size: 13px; }
+  .alias { font-weight: 600; }
+  .chev { color: var(--muted); text-align: right; font-size: 16px; }
+  td.devcnt { color: var(--muted); }
+  td.docact { white-space: nowrap; }
+  td.docact .ghost { display: inline-block; text-decoration: none; }
+  td.docact .ghost + .ghost { margin-left: 6px; }
+
+  /* 벤더 뱃지 */
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+  .v-fortinet  { background: #ffe2e0; color: #c9372c; }
+  .v-paloalto  { background: #fff0d6; color: #b8740b; }
+  .v-ahnlab    { background: #e4ecff; color: #0052cc; }
+  .v-axgate    { background: #dcf5e6; color: #1f8a55; }
+  .v-checkpoint{ background: #ffe6f2; color: #ce2a7d; }
+  .v-mf2       { background: #ede4ff; color: #6c3ce0; }
+  .v-bluemax   { background: #e0f0ff; color: #1a73c2; }
+  .v-wins      { background: #e6f4ff; color: #2076c4; }
+  .v-nexg      { background: #ffeede; color: #c2660a; }
+  .v-future    { background: #eef0f3; color: #5e6c84; }
+  .v-aws       { background: #ffe7cc; color: #b35900; }
+  .v-secui     { background: #e6fbf2; color: #11936b; }
+
+  /* 상태 pill */
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+  .pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; }
+  .pill.up   { background: var(--ok-soft);   color: var(--ok); }   .pill.up::before   { background: var(--ok); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); } .pill.warn::before { background: var(--warn); }
+  .pill.down { background: var(--down-soft); color: var(--down); } .pill.down::before { background: var(--down); }
+  .pill.checking { background: var(--chip); color: var(--muted); } .pill.checking::before { background: var(--muted); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+  /* 문서 제공형태 pill */
+  .doc-pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+  .doc-pill.pub  { background: var(--ok-soft);   color: var(--ok); }
+  .doc-pill.int  { background: var(--warn-soft); color: var(--warn); }
+  .doc-pill.none { background: var(--chip);      color: var(--muted); }
+
+  /* 등록 서버 칩 (테이블) */
+  .srvcell { line-height: 1.9; }
+  .srv-chip { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; background: var(--chip); color: var(--muted); margin-right: 4px; }
+  .srv-chip.none { background: var(--warn-soft); color: var(--warn); }
+
+  /* 등록 서버 (드로어) */
+  .scode { font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-soft); border-radius: 5px; padding: 1px 6px; margin-left: 5px; }
+  .srv { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; }
+  .srv .si { width: 34px; height: 34px; border-radius: 10px; background: var(--primary-soft); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .srv .smeta { min-width: 0; }
+  .srv .sname { font-weight: 600; }
+  .srv .srole { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .srv .shost { margin-left: auto; font-family: 'Consolas', monospace; font-size: 12px; color: var(--muted); flex-shrink: 0; }
+  .srv-empty { color: var(--muted); font-size: 13px; padding: 6px 2px; }
+
+  /* 등록 서버 뷰 (역방향) */
+  .server-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  .srv-card { padding: 18px 20px; }
+  .srv-head { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 6px; cursor: pointer; user-select: none; }
+  .srv-head .si.big { width: 40px; height: 40px; border-radius: 11px; background: var(--primary-soft); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .srv-h-name { font-weight: 700; font-size: 15px; }
+  .srv-h-sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .srv-h-cnt { margin-left: auto; background: var(--chip); color: var(--muted); border-radius: 9px; padding: 5px 12px; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .scaret { color: var(--muted); font-size: 12px; transition: transform .15s; flex-shrink: 0; }
+  .srv-devs { max-height: 320px; overflow-y: auto; }
+  .srv-card.collapsed .srv-devs { display: none; }
+  .srv-card.collapsed .srv-head { padding-bottom: 0; border-bottom: none; margin-bottom: 0; }
+  .srv-card.collapsed .scaret { transform: rotate(-90deg); }
+  .srv-dev { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 9px; cursor: pointer; }
+  .srv-dev:hover { background: var(--hover); }
+  .srv-dev.orphan { cursor: default; }
+  .srv-dev.orphan:hover { background: none; }
+  .srv-dev-name { font-weight: 600; }
+  .srv-dev-ip { color: var(--muted); font-family: 'Consolas', monospace; font-size: 12px; }
+
+  .empty { text-align: center; color: var(--muted); padding: 50px 0; }
+
+  /* ── 페이지네이션 ── */
+  .pager { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; gap: 10px; }
+  .pager .info { color: var(--muted); font-size: 13px; }
+  .pager .pages { display: flex; gap: 5px; align-items: center; }
+  .pager button {
+    min-width: 36px; height: 36px; border: 1px solid var(--line); background: var(--card);
+    border-radius: 10px; cursor: pointer; font-size: 13px; color: var(--text); padding: 0 9px;
+  }
+  .pager button:hover:not(:disabled) { background: var(--hover); }
+  .pager button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .pager button:disabled { opacity: .4; cursor: default; }
+  .pager .size { color: var(--muted); font-size: 13px; }
+  .pager .size select { padding: 7px 9px; }
+
+  /* ── 상세 슬라이드 패널 ── */
+  .overlay { position: fixed; inset: 0; background: rgba(20,20,43,.45); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 9; }
+  .overlay.on { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; height: 100%; width: 444px; max-width: 92vw;
+    background: var(--card); box-shadow: -8px 0 40px rgba(20,20,43,.22);
+    transform: translateX(100%); transition: transform .25s ease; overflow-y: auto; z-index: 10;
+  }
+  .drawer.on { transform: translateX(0); }
+  .drawer .dh { padding: 24px 26px 20px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--card); }
+  .drawer .dh .top { display: flex; justify-content: space-between; align-items: start; }
+  .drawer .dh h2 { margin: 10px 0 3px; font-size: 21px; }
+  .drawer .dh .ipline { color: var(--muted); font-family: 'Consolas', monospace; font-size: 13px; }
+  .close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted); line-height: 1; }
+  .close:hover { color: var(--text); }
+  .dbody { padding: 10px 26px 34px; }
+  .section { margin-top: 24px; }
+  .section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 12px; }
+  .section h3.sec-head { display: flex; align-items: center; justify-content: space-between; }
+  .section h3.sec-head .ghost.sm { text-transform: none; letter-spacing: 0; }
+  .field { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); gap: 12px; }
+  .field:last-child { border-bottom: none; }
+  .field .k { color: var(--muted); font-size: 13px; flex-shrink: 0; }
+  .field .v { font-weight: 500; text-align: right; word-break: break-all; }
+  .field .v.mono { font-family: 'Consolas', monospace; font-size: 13px; }
+  .secret { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+  .secret .val { font-family: 'Consolas', monospace; font-size: 13px; }
+  .eye, .copy { background: var(--chip); border: none; border-radius: 7px; width: 29px; height: 27px; cursor: pointer; color: var(--text); }
+  .eye:hover, .copy:hover { background: var(--line); }
+  .console-btns { display: flex; gap: 9px; margin-top: 4px; }
+  .console-btns a {
+    flex: 1; text-align: center; text-decoration: none; padding: 12px; border-radius: 11px;
+    font-weight: 600; font-size: 14px;
+  }
+  .console-btns a.web { background: var(--primary); color: #fff; }
+  .console-btns a.web:hover { background: var(--primary-2); }
+  .console-btns a.ssh { background: var(--card); color: var(--text); border: 1px solid var(--line); }
+  .console-btns a.ssh:hover { background: var(--hover); }
+  .status-banner { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-radius: 11px; margin-top: 4px; font-size: 13px; }
+  .status-banner.up   { background: var(--ok-soft);   color: var(--ok); }
+  .status-banner.warn { background: var(--warn-soft); color: var(--warn); }
+  .status-banner.down { background: var(--down-soft); color: var(--down); }
+  .status-banner.checking { background: var(--chip); color: var(--muted); }
+  .status-banner .desc { color: var(--text); opacity: .85; }
+
+  /* ── 장비 추가 다이얼로그 ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(20,20,43,.45);
+    opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 11;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal-overlay.on { opacity: 1; pointer-events: auto; }
+  .modal {
+    width: 580px; max-width: 100%; max-height: 90vh; overflow-y: auto;
+    background: var(--card); border-radius: 18px; box-shadow: 0 24px 70px rgba(20,20,43,.32);
+    transform: translateY(10px) scale(.985); transition: transform .2s;
+  }
+  .modal-overlay.on .modal { transform: none; }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 22px 24px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--card); }
+  .modal-head h2 { font-size: 19px; }
+  .modal-body { padding: 20px 24px; }
+  .modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px 22px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .fld { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+  .fld.full { grid-column: 1 / -1; }
+  .fld > span { color: var(--muted); font-weight: 600; }
+  .fld input, .fld select {
+    padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--bg); color: var(--text); font-size: 14px; outline: none; font-family: inherit;
+  }
+  .fld input:focus, .fld select:focus { border-color: var(--primary); background: var(--card); }
+  .form-note { color: var(--muted); font-size: 12.5px; margin-top: 14px; background: var(--chip); padding: 10px 12px; border-radius: 10px; line-height: 1.7; }
+
+  /* ── 관리자 모드 ── */
+  .brand .logo { cursor: default; user-select: none; }   /* 클릭 가능 티 안 나게 (이스터에그) */
+  .admin-badge {
+    display: none; margin-left: 7px; font-size: 9px; font-weight: 800; letter-spacing: .06em;
+    background: var(--down); color: #fff; border-radius: 5px; padding: 2px 5px; vertical-align: middle;
+  }
+  body.admin .admin-badge { display: inline-block; }
+  .adm { display: none; }            /* 관리자 전용 요소 */
+  body.admin .adm { display: inline-flex; }
+  body.admin .adm.block { display: block; }
+  .ghost.danger { color: var(--down); border-color: var(--down); }
+  .ghost.danger:hover { background: var(--down-soft); }
+  .adm-x {
+    border: none; background: var(--chip); color: var(--muted); border-radius: 6px;
+    width: 24px; height: 24px; cursor: pointer; font-size: 13px; line-height: 1; flex-shrink: 0;
+  }
+  .adm-x:hover { background: var(--down-soft); color: var(--down); }
+  .srv-admin-bar { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+
+  /* 토스트 */
+  #toast {
+    position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--card); padding: 12px 20px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 20;
+  }
+  #toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .form-err { color: var(--down); font-size: 13px; margin-top: 14px; min-height: 18px; }
+
+  @media (max-width: 1080px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .dash-grid, .server-grid, .stat-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── 좌측 네비 사이드바 ── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo" onclick="logoTap()" title="">🛡</span>
+      <span class="brand-name nl">방화벽 관리<span class="admin-badge">ADMIN</span></span>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-view="devices"   onclick="switchView('devices')" title="장비 목록"><span class="ni">🖥</span><span class="nl">장비 목록</span></button>
+      <button class="nav-item"        data-view="servers"   onclick="switchView('servers')" title="등록 서버"><span class="ni">🗄</span><span class="nl">등록 서버</span></button>
+      <button class="nav-item"        data-view="docs"      onclick="switchView('docs')" title="API 문서"><span class="ni">📄</span><span class="nl">API 문서</span></button>
+      <button class="nav-item"        data-view="stats"     onclick="switchView('stats')" title="통계"><span class="ni">📊</span><span class="nl">통계</span></button>
+    </nav>
+    <div class="nav-foot">
+      <button class="nav-item" id="themeBtn" onclick="toggleTheme()" title="다크/라이트 모드"><span class="ni">🌙</span><span class="nl">다크 모드</span></button>
+      <button class="nav-item" id="collapseBtn" onclick="toggleSidebar()" title="메뉴 접기/펼치기"><span class="ni" id="collapseIcon">‹</span><span class="nl">접기</span></button>
+    </div>
+  </aside>
+
+  <!-- ── 콘텐츠 ── -->
+  <main class="content">
+    <header class="topbar">
+      <div>
+        <h1 id="pageTitle">대시보드</h1>
+        <div class="sub" id="pageSub">사내 테스트 방화벽 통합 현황</div>
+      </div>
+      <button class="btn" id="addBtn" onclick="openAddModal()">+ 장비 추가</button>
+    </header>
+
+    <!-- 장비 목록 -->
+    <section class="view" data-view="devices" hidden>
+      <div class="kpis" id="kpis"></div>
+
+      <div class="card toolbar">
+        <div class="search">
+          <span class="ic">🔍</span>
+          <input id="q" type="text" placeholder="alias · IP · 버전 검색…" autocomplete="off">
+        </div>
+        <select id="status">
+          <option value="">전체 상태</option>
+          <option value="up">정상</option>
+          <option value="warn">점검필요</option>
+          <option value="down">응답없음</option>
+        </select>
+        <button class="ghost" onclick="resetFilters()">초기화</button>
+        <button class="ghost" id="excelBtn">엑셀 ⬇</button>
+      </div>
+
+      <div class="row-2col">
+        <aside class="card tree" id="tree"></aside>
+        <div class="col">
+          <div class="card tablebox">
+            <table>
+              <thead>
+                <tr>
+                  <th data-k="id">ID <span class="arr">▾</span></th>
+                  <th data-k="vendor">Vendor <span class="arr">▾</span></th>
+                  <th data-k="ip">IP <span class="arr">▾</span></th>
+                  <th data-k="alias">Alias <span class="arr">▾</span></th>
+                  <th data-k="version">Version <span class="arr">▾</span></th>
+                  <th data-k="status">상태 <span class="arr">▾</span></th>
+                  <th>등록 서버</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+            <div class="empty" id="empty" style="display:none">검색 결과가 없습니다.</div>
+          </div>
+
+          <div class="pager">
+            <div class="info" id="pageInfo"></div>
+            <div class="pages" id="pages"></div>
+            <div class="size">
+              페이지당
+              <select id="pageSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 등록 서버 (역방향 조회) -->
+    <section class="view" data-view="servers" hidden>
+      <div id="serverList"></div>
+    </section>
+
+    <!-- API 문서 -->
+    <section class="view" data-view="docs" hidden>
+      <div class="card toolbar">
+        <div class="search">
+          <span class="ic">🔍</span>
+          <input id="docQ" type="text" placeholder="벤더 · 버전 검색…" autocomplete="off">
+        </div>
+      </div>
+      <div class="card tablebox">
+        <table>
+          <thead>
+            <tr>
+              <th>Vendor</th>
+              <th>문서 버전</th>
+              <th>제공 형태</th>
+              <th>적용 장비</th>
+              <th>문서</th>
+            </tr>
+          </thead>
+          <tbody id="docRows"></tbody>
+        </table>
+        <div class="empty" id="docEmpty" style="display:none">표시할 문서가 없습니다.</div>
+      </div>
+      <div class="pager"><div class="info" id="docInfoBar"></div></div>
+    </section>
+
+    <!-- 통계 -->
+    <section class="view" data-view="stats" hidden>
+      <div class="card panel">
+        <h3>상태 분포</h3>
+        <div class="donut-wrap">
+          <div class="donut" id="statusDonut">
+            <div class="donut-c"><b id="donutTotal">0</b><span>전체 장비</span></div>
+          </div>
+          <div class="legend" id="statusLegend"></div>
+        </div>
+      </div>
+      <div class="stat-grid">
+        <div class="card panel">
+          <h3>벤더별 장비</h3>
+          <div id="vendorBars"></div>
+        </div>
+        <div class="card panel">
+          <h3>API 문서 제공 현황</h3>
+          <div id="docStats"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- 상세 패널 -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer"></aside>
+
+<!-- 장비 추가 다이얼로그 -->
+<div class="modal-overlay" id="modalOverlay" onclick="overlayClose(event)">
+  <div class="modal" id="addModal"></div>
+</div>
+
+<!-- 서버 추가 다이얼로그 (관리자) -->
+<div class="modal-overlay" id="srvModalOverlay" onclick="srvOverlayClose(event)">
+  <div class="modal" id="srvModal"></div>
+</div>
+
+<!-- 토스트 -->
+<div id="toast"></div>
+
+<script>
+/* 장비 데이터는 /api/firewalls 에서 로드 (아래 loadFirewalls) */
+let DATA = [];
+
+const STATUS_LABEL = { up: '정상', warn: '점검필요', down: '응답없음', checking: '확인 중' };
+const STATUS_DESC = {
+  up:   '정상 동작 중',
+  warn: '점검 필요 (키 만료·수집 지연 등)',
+  down: '장비 응답 없음',
+  checking: 'PING 응답 확인 중…',
+};
+/* 등록 서버는 백엔드가 IP 매칭해 장비마다 d.servers 로 내려준다 */
+function deviceServers(d) { return d.servers || []; }
+
+/* ── API ── */
+async function api(path, opts) {
+  const res = await fetch('/api' + path, opts);
+  if (!res.ok) {
+    let msg = res.status;
+    try { msg = (await res.json()).detail || msg; } catch (e) {}
+    throw new Error(msg);
+  }
+  return res.status === 204 ? null : res.json();
+}
+/* 백엔드(snake_case) → 프론트(camelCase) 매핑 */
+function mapFw(r) {
+  return {
+    id: r.id, vendor: r.vendor, ip: r.ip, alias: r.alias, version: r.version || '-',
+    status: r.status, mgmtPort: r.mgmt_port, adminId: r.admin_id || '-',
+    expireDays: r.api_key_expire_days, lastSeen: r.last_seen_at || '—',
+    apiAuth: r.status === 'down' ? '실패' : '성공',
+    servers: r.servers || [],
+    apiKey: r.api_key, password: r.password,   // 상세 응답에서만 채워짐
+  };
+}
+async function loadFirewalls() {
+  DATA = (await api('/firewalls')).map(mapFw);
+}
+
+const VIEW_META = {
+  devices:   { title: '장비 목록',  sub: '사내 테스트 방화벽 장비 전체' },
+  servers:   { title: '등록 서버',  sub: '방화벽이 등록된 내부 서버 (API 키 보관처)' },
+  docs:      { title: 'API 문서',   sub: '벤더·버전별 REST API 문서' },
+  stats:     { title: '통계',       sub: '상태 · 벤더 · 문서 분포' },
+};
+
+let sortKey = 'id', sortDir = 1;
+let page = 1, pageSize = 10;
+let selectedVendor = '';
+let view = 'devices';
+const openVendors = new Set();
+const expandedServers = new Set();   // 비어있음 = 전부 접힘(기본)
+const $ = (s) => document.querySelector(s);
+
+/* ── 관리자 모드 (로고 1.5초 내 5연타로 토글) ── */
+let adminMode = sessionStorage.getItem('fw-admin') === '1';
+let logoClicks = 0, logoTimer = null;
+function logoTap() {
+  logoClicks++;
+  clearTimeout(logoTimer);
+  logoTimer = setTimeout(() => { logoClicks = 0; }, 1500);
+  if (logoClicks >= 5) { logoClicks = 0; setAdmin(!adminMode); }
+}
+function setAdmin(on) {
+  adminMode = on;
+  sessionStorage.setItem('fw-admin', on ? '1' : '0');
+  document.body.classList.toggle('admin', on);
+  toast(on ? '🔓 관리자 모드 ON' : '🔒 관리자 모드 OFF');
+  render();
+  if (view === 'devices') closeDrawer();
+}
+let toastTimer = null;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), 1800);
+}
+
+/* ── 뷰 전환 ── */
+function switchView(v) {
+  view = v;
+  document.querySelectorAll('.nav-item[data-view]').forEach(n => n.classList.toggle('active', n.dataset.view === v));
+  document.querySelectorAll('.view').forEach(s => s.hidden = s.dataset.view !== v);
+  $('#pageTitle').textContent = VIEW_META[v].title;
+  $('#pageSub').textContent = VIEW_META[v].sub;
+  $('#addBtn').style.display = v === 'devices' ? '' : 'none';   // 장비 추가는 장비 목록에서만
+  render();
+}
+
+function render() {
+  if (view === 'devices') { renderKpis(); renderTree(); renderDevices(); }
+  else if (view === 'servers') renderServers();
+  else if (view === 'docs') renderDocs();
+  else if (view === 'stats') renderStats();
+}
+
+/* ── 등록 서버 (서버 → 등록된 방화벽 역방향 조회, /api/servers) ── */
+async function renderServers() {
+  let servers;
+  try { servers = await api('/servers'); }
+  catch (e) { $('#serverList').innerHTML = `<div class="empty">서버 정보를 불러오지 못했습니다: ${e.message}</div>`; return; }
+
+  const admX = (sid, ip) => adminMode
+    ? `<button class="adm-x" title="등록 해제" onclick="event.stopPropagation(); unregisterIp('${sid}','${ip}')">×</button>` : '';
+
+  const cards = servers.map(s => {
+    const collapsed = !expandedServers.has(s.id);
+    const rows = s.matched.map(d => `
+      <div class="srv-dev" onclick="openDrawer(${d.id})">
+        ${vendorBadge(d.vendor)}
+        <span class="srv-dev-name">${d.alias}</span>
+        <span class="srv-dev-ip">${d.ip}</span>
+        <span class="pill ${d.status}" style="margin-left:auto">${STATUS_LABEL[d.status]}</span>
+        ${admX(s.id, d.ip)}
+      </div>`).join('')
+    + s.orphan.map(ip => `
+      <div class="srv-dev orphan" title="서버 DB에는 있지만 장비 목록(인벤토리)에 없는 IP">
+        <span class="srv-chip none">인벤토리 없음</span>
+        <span class="srv-dev-ip">${ip}</span>
+        <span style="margin-left:auto"></span>
+        ${admX(s.id, ip)}
+      </div>`).join('');
+    const adminHead = adminMode ? `
+      <button class="ghost sm adm" onclick="event.stopPropagation(); openRegPrompt('${s.id}')">＋방화벽</button>
+      <button class="adm-x adm" title="서버 삭제" onclick="event.stopPropagation(); deleteServer('${s.id}','${s.name}')">🗑</button>` : '';
+    return `
+      <div class="card panel srv-card ${collapsed ? 'collapsed' : ''}">
+        <div class="srv-head" onclick="toggleServer('${s.id}')">
+          <span class="si big">🗄</span>
+          <div class="srv-h-meta">
+            <div class="srv-h-name">${s.name} <span class="scode">${s.short}</span></div>
+            <div class="srv-h-sub">${s.role} · ${s.host}</div>
+          </div>
+          <span class="srv-h-cnt">${s.registered_count}대${s.orphan.length ? ` · 미매칭 ${s.orphan.length}` : ''}</span>
+          ${adminHead}
+          <span class="scaret">▾</span>
+        </div>
+        <div class="srv-devs">
+          ${rows || `<div class="srv-empty">서버 DB에 등록된 방화벽이 없습니다.</div>`}
+        </div>
+      </div>`;
+  }).join('');
+
+  const adminBar = adminMode
+    ? `<div class="srv-admin-bar"><button class="btn" onclick="openServerModal()">+ 서버 추가</button></div>` : '';
+  $('#serverList').innerHTML = adminBar + `<div class="server-grid">${cards}</div>`;
+}
+function toggleServer(id) {
+  expandedServers.has(id) ? expandedServers.delete(id) : expandedServers.add(id);
+  renderServers();
+}
+
+/* ── 관리자 액션 ── */
+function openRegPrompt(sid) {
+  const ip = prompt('이 서버 DB에 등록할 방화벽 IP:');
+  if (!ip) return;
+  api(`/servers/${sid}/registrations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip: ip.trim() }) })
+    .then(() => { toast('등록됨'); expandedServers.add(sid); loadFirewalls(); renderServers(); })
+    .catch(e => alert('등록 실패: ' + e.message));
+}
+function unregisterIp(sid, ip) {
+  if (!confirm(`${ip} 등록을 해제할까요?`)) return;
+  api(`/servers/${sid}/registrations/${ip}`, { method: 'DELETE' })
+    .then(() => { toast('해제됨'); loadFirewalls(); renderServers(); })
+    .catch(e => alert('해제 실패: ' + e.message));
+}
+function deleteServer(sid, name) {
+  if (!confirm(`서버 "${name}" 을(를) 삭제할까요? (등록 정보도 함께 삭제)`)) return;
+  api(`/servers/${sid}`, { method: 'DELETE' })
+    .then(() => { toast('서버 삭제됨'); renderServers(); })
+    .catch(e => alert('삭제 실패: ' + e.message));
+}
+function openServerModal() {
+  $('#srvModal').innerHTML = `
+    <div class="modal-head"><h2>서버 추가</h2><button class="close" onclick="closeServerModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <label class="fld"><span>서버 ID *</span><input id="s_id" placeholder="예: mgmt-02" autocomplete="off"></label>
+        <label class="fld"><span>약칭 *</span><input id="s_short" placeholder="예: NMS2" autocomplete="off"></label>
+        <label class="fld full"><span>이름 *</span><input id="s_name" placeholder="예: 통합관제 NMS #2" autocomplete="off"></label>
+        <label class="fld"><span>호스트 *</span><input id="s_host" placeholder="예: 10.10.10.12" autocomplete="off"></label>
+        <label class="fld"><span>역할</span><input id="s_role" placeholder="예: 상태 모니터링" autocomplete="off"></label>
+      </div>
+      <div class="form-err" id="s_err"></div>
+    </div>
+    <div class="modal-foot"><button class="ghost" onclick="closeServerModal()">취소</button><button class="btn" onclick="submitServer()">추가</button></div>`;
+  $('#srvModalOverlay').classList.add('on');
+  setTimeout(() => $('#s_id').focus(), 50);
+}
+function closeServerModal() { $('#srvModalOverlay').classList.remove('on'); }
+function srvOverlayClose(e) { if (e.target.id === 'srvModalOverlay') closeServerModal(); }
+async function submitServer() {
+  const id = $('#s_id').value.trim(), short = $('#s_short').value.trim(),
+        name = $('#s_name').value.trim(), host = $('#s_host').value.trim();
+  if (!id || !short || !name || !host) { $('#s_err').textContent = 'ID·약칭·이름·호스트는 필수입니다.'; return; }
+  try {
+    await api('/servers', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, short, name, host, role: $('#s_role').value.trim() || null }) });
+  } catch (e) { $('#s_err').textContent = '추가 실패: ' + e.message; return; }
+  closeServerModal(); toast('서버 추가됨'); renderServers();
+}
+function deleteDevice(id) {
+  if (!confirm('이 장비를 삭제할까요?')) return;
+  api('/firewalls/' + id, { method: 'DELETE' })
+    .then(async () => { toast('장비 삭제됨'); closeDrawer(); await loadFirewalls(); render(); })
+    .catch(e => alert('삭제 실패: ' + e.message));
+}
+
+function vendorBadge(v) {
+  const cls = 'v-' + v.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return `<span class="badge ${cls}">${v}</span>`;
+}
+function serverChips(d) {
+  const s = deviceServers(d);
+  if (!s.length) return `<span class="srv-chip none">미등록</span>`;
+  return s.map(x => `<span class="srv-chip" title="${x.name} · ${x.host}">${x.short}</span>`).join('');
+}
+function vendorCounts() {
+  const c = {};
+  DATA.forEach(d => c[d.vendor] = (c[d.vendor] || 0) + 1);
+  return c;
+}
+
+/* ── 벤더 트리 ── */
+function renderTree() {
+  const counts = vendorCounts();
+  const vendors = Object.keys(counts).sort();
+  let html = `<div class="titlebar">벤더</div>`;
+  html += `<div class="tnode ${selectedVendor === '' ? 'active' : ''}" onclick="selectVendor('')">
+    <span class="caret" style="visibility:hidden">▸</span>
+    <span class="nm">전체 벤더</span><span class="cnt">${DATA.length}</span></div>`;
+  vendors.forEach(v => {
+    const open = openVendors.has(v);
+    const devs = DATA.filter(d => d.vendor === v).sort((a, b) => a.alias.localeCompare(b.alias));
+    html += `<div class="tnode ${selectedVendor === v ? 'active' : ''}" onclick="selectVendor('${v}')">
+      <span class="caret ${open ? 'open' : ''}" onclick="toggleVendor(event,'${v}')">▸</span>
+      <span class="nm">${v}</span><span class="cnt">${counts[v]}</span></div>`;
+    html += `<div class="tchildren ${open ? 'open' : ''}">` + devs.map(d =>
+      `<div class="tchild" onclick="openDrawer(${d.id})">
+        <span class="ca">${d.alias}</span><span class="cip">${d.ip}</span></div>`
+    ).join('') + `</div>`;
+  });
+  $('#tree').innerHTML = html;
+}
+function selectVendor(v) {
+  if (v) {
+    if (selectedVendor === v && openVendors.has(v)) openVendors.delete(v);
+    else openVendors.add(v);
+  }
+  selectedVendor = v; page = 1; render();
+}
+function toggleVendor(e, v) {
+  e.stopPropagation();
+  openVendors.has(v) ? openVendors.delete(v) : openVendors.add(v);
+  renderTree();
+}
+
+/* ── 장비 목록 ── */
+function getFiltered() {
+  const q = $('#q').value.trim().toLowerCase();
+  const vendor = selectedVendor;
+  const status = $('#status').value;
+  let rows = DATA.filter(d => {
+    if (vendor && d.vendor !== vendor) return false;
+    if (status && d.status !== status) return false;
+    if (q) {
+      const sv = deviceServers(d).map(x => `${x.short} ${x.name}`).join(' ');
+      const hay = `${d.alias} ${d.ip} ${d.version} ${d.vendor} ${d.id} ${sv}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  rows.sort((a, b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (sortKey === 'id') { av = +av; bv = +bv; }
+    if (av < bv) return -1 * sortDir;
+    if (av > bv) return 1 * sortDir;
+    return 0;
+  });
+  return rows;
+}
+
+function renderDevices() {
+  const all = getFiltered();
+  const totalPages = Math.max(1, Math.ceil(all.length / pageSize));
+  if (page > totalPages) page = totalPages;
+  const start = (page - 1) * pageSize;
+  const rows = all.slice(start, start + pageSize);
+
+  $('#rows').innerHTML = rows.map(d => `
+    <tr onclick="openDrawer(${d.id})">
+      <td class="id">${d.id}</td>
+      <td>${vendorBadge(d.vendor)}</td>
+      <td class="ip">${d.ip}</td>
+      <td class="alias">${d.alias}</td>
+      <td class="ver">${d.version}</td>
+      <td><span class="pill ${d.status}">${STATUS_LABEL[d.status]}</span></td>
+      <td class="srvcell">${serverChips(d)}</td>
+      <td class="chev">›</td>
+    </tr>
+  `).join('');
+
+  $('#empty').style.display = all.length ? 'none' : 'block';
+
+  document.querySelectorAll('thead th').forEach(th => {
+    if (!th.dataset.k) return;
+    th.classList.toggle('sorted', th.dataset.k === sortKey);
+    const arr = th.querySelector('.arr');
+    if (arr) arr.textContent = (th.dataset.k === sortKey) ? (sortDir === 1 ? '▴' : '▾') : '▾';
+  });
+
+  renderPager(all.length, totalPages, start, rows.length);
+}
+
+function renderPager(total, totalPages, start, shown) {
+  $('#pageInfo').textContent = total ? `${start + 1}–${start + shown} / 전체 ${total}대` : '0대';
+  const wrap = $('#pages');
+  wrap.innerHTML = '';
+  const add = (label, p, opts = {}) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    if (opts.active) b.classList.add('active');
+    if (opts.disabled) b.disabled = true;
+    else b.onclick = () => { page = p; render(); };
+    wrap.appendChild(b);
+  };
+  add('‹', page - 1, { disabled: page === 1 });
+  let s = Math.max(1, page - 3), e = Math.min(totalPages, s + 6);
+  s = Math.max(1, e - 6);
+  if (s > 1) { add('1', 1); if (s > 2) addDots(wrap); }
+  for (let p = s; p <= e; p++) add(String(p), p, { active: p === page });
+  if (e < totalPages) { if (e < totalPages - 1) addDots(wrap); add(String(totalPages), totalPages); }
+  add('›', page + 1, { disabled: page === totalPages });
+}
+function addDots(wrap) {
+  const span = document.createElement('span');
+  span.textContent = '…'; span.style.color = 'var(--muted)'; span.style.padding = '0 4px';
+  wrap.appendChild(span);
+}
+
+/* ── KPI ── */
+function statusCounts() {
+  return {
+    up: DATA.filter(d => d.status === 'up').length,
+    warn: DATA.filter(d => d.status === 'warn').length,
+    down: DATA.filter(d => d.status === 'down').length,
+  };
+}
+function renderKpis() {
+  const total = DATA.length;
+  const { up, warn, down } = statusCounts();
+  const vendors = new Set(DATA.map(d => d.vendor)).size;
+  const pct = n => total ? Math.round(n / total * 100) : 0;
+  const cur = $('#status') ? $('#status').value : '';
+  $('#kpis').innerHTML = `
+    <div class="card kpi total ${cur === '' ? 'sel' : ''}" onclick="filterStatus('')">
+      <div class="kpi-top"><span class="kpi-ic">🖥️</span> 전체 장비</div>
+      <div class="kpi-n">${total}</div>
+      <div class="kpi-bar"><i style="width:100%"></i></div>
+      <div class="kpi-sub">${vendors}개 벤더</div>
+    </div>
+    <div class="card kpi ok ${cur === 'up' ? 'sel' : ''}" onclick="filterStatus('up')">
+      <div class="kpi-top"><span class="kpi-ic">✅</span> 정상</div>
+      <div class="kpi-n">${up}</div>
+      <div class="kpi-bar"><i style="width:${pct(up)}%"></i></div>
+      <div class="kpi-sub">전체의 ${pct(up)}%</div>
+    </div>
+    <div class="card kpi warn ${cur === 'warn' ? 'sel' : ''}" onclick="filterStatus('warn')">
+      <div class="kpi-top"><span class="kpi-ic">⚠️</span> 점검필요</div>
+      <div class="kpi-n">${warn}</div>
+      <div class="kpi-bar"><i style="width:${pct(warn)}%"></i></div>
+      <div class="kpi-sub">키 만료·수집 지연 등</div>
+    </div>
+    <div class="card kpi down ${cur === 'down' ? 'sel' : ''}" onclick="filterStatus('down')">
+      <div class="kpi-top"><span class="kpi-ic">⛔</span> 응답없음</div>
+      <div class="kpi-n">${down}</div>
+      <div class="kpi-bar"><i style="width:${pct(down)}%"></i></div>
+      <div class="kpi-sub">도달 불가</div>
+    </div>`;
+}
+function filterStatus(s) {
+  $('#status').value = s;
+  page = 1;
+  if (view !== 'devices') switchView('devices'); else render();
+}
+
+/* ── 통계 ── */
+function renderStats() {
+  const total = DATA.length;
+  const { up, warn, down } = statusCounts();
+  const upDeg = up / total * 360;
+  const warnDeg = (up + warn) / total * 360;
+  $('#statusDonut').style.background =
+    `conic-gradient(var(--ok) 0 ${upDeg}deg, var(--warn) ${upDeg}deg ${warnDeg}deg, var(--down) ${warnDeg}deg 360deg)`;
+  $('#donutTotal').textContent = total;
+  const leg = [['정상', up, 'var(--ok)'], ['점검필요', warn, 'var(--warn)'], ['응답없음', down, 'var(--down)']];
+  $('#statusLegend').innerHTML = leg.map(([n, c, col]) =>
+    `<div class="li"><span class="sw" style="background:${col}"></span>${n}<span class="lv">${c}대</span></div>`).join('');
+
+  const counts = vendorCounts();
+  const vendors = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(...vendors.map(v => v[1]));
+  $('#vendorBars').innerHTML = vendors.map(([v, c]) => `
+    <div class="bar-row">
+      <span class="bar-label">${vendorBadge(v)}</span>
+      <span class="bar-track"><i style="width:${c / max * 100}%"></i></span>
+      <span class="bar-val">${c}</span>
+    </div>`).join('');
+
+  const docs = buildDocs();
+  const pub = docs.filter(g => g.avail === 'pub').length;
+  const intn = docs.filter(g => g.avail === 'int').length;
+  const none = docs.filter(g => g.avail === 'none').length;
+  const dmax = Math.max(pub, intn, none, 1);
+  const drows = [['공개 문서', pub, 'var(--ok)'], ['사내 보관', intn, 'var(--warn)'], ['미제공', none, 'var(--muted)']];
+  $('#docStats').innerHTML = drows.map(([n, c, col]) => `
+    <div class="bar-row">
+      <span class="bar-label">${n}</span>
+      <span class="bar-track"><i style="width:${c / dmax * 100}%;background:${col}"></i></span>
+      <span class="bar-val">${c}</span>
+    </div>`).join('') + `<div class="kpi-sub" style="margin-top:10px">총 ${docs.length}종 문서</div>`;
+}
+
+/* ── 상세 패널 ── */
+function secretField(label, value) {
+  return `
+    <div class="field">
+      <span class="k">${label}</span>
+      <span class="secret">
+        <span class="val" data-real="${value}" data-shown="0">••••••••••••</span>
+        <button class="eye" onclick="toggleSecret(this)" title="표시/숨김">👁</button>
+        <button class="copy" onclick="copyVal(this,'${value}')" title="복사">⧉</button>
+      </span>
+    </div>`;
+}
+async function openDrawer(id) {
+  let d;
+  try { d = mapFw(await api('/firewalls/' + id)); }
+  catch (e) { alert('상세를 불러오지 못했습니다: ' + e.message); return; }
+  const webUrl = `https://${d.ip}${d.mgmtPort && d.mgmtPort !== 443 ? ':' + d.mgmtPort : ''}/`;
+  const sshUrl = `ssh://${d.adminId}@${d.ip}`;
+  $('#drawer').innerHTML = `
+    <div class="dh">
+      <div class="top">
+        <div>
+          ${vendorBadge(d.vendor)}
+          <h2>${d.alias}</h2>
+          <div class="ipline">${d.ip} · ID ${d.id}</div>
+        </div>
+        <button class="close" onclick="closeDrawer()">×</button>
+      </div>
+    </div>
+    <div class="dbody">
+
+      <div class="section">
+        <h3 class="sec-head">상태 <button class="ghost sm" onclick="repingDrawer(${d.id})">재점검 ↻</button></h3>
+        <div class="status-banner ${d.status}">
+          <span class="pill ${d.status}">${STATUS_LABEL[d.status]}</span>
+          <span class="desc">${STATUS_DESC[d.status]}</span>
+        </div>
+        <div class="field"><span class="k">마지막 수집</span><span class="v">${d.lastSeen}</span></div>
+        <div class="field"><span class="k">API 인증</span><span class="v">${d.apiAuth}</span></div>
+        <div class="field"><span class="k">API 키 만료</span><span class="v">${d.expireDays > 0 ? 'D-' + d.expireDays : '만료/미확인'}</span></div>
+      </div>
+
+      <div class="section">
+        <h3>장비 정보</h3>
+        <div class="field"><span class="k">벤더</span><span class="v">${d.vendor}</span></div>
+        <div class="field"><span class="k">버전</span><span class="v">${d.version}</span></div>
+        <div class="field"><span class="k">Alias</span><span class="v">${d.alias}</span></div>
+      </div>
+
+      <div class="section">
+        <h3>접속 정보</h3>
+        <div class="field"><span class="k">관리 IP</span><span class="v mono">${d.ip}</span></div>
+        <div class="field"><span class="k">관리 포트</span><span class="v mono">${d.mgmtPort}</span></div>
+        <div class="field"><span class="k">관리자 ID</span><span class="v mono">${d.adminId}</span></div>
+        ${secretField('비밀번호', d.password || '')}
+        ${secretField('REST API Key', d.apiKey || '')}
+      </div>
+
+      <div class="section">
+        <h3>등록 서버 <span style="text-transform:none;font-weight:500;color:var(--muted)">· IP 매칭 결과 · API 키 변경 시 갱신처</span></h3>
+        ${(() => {
+          const ss = deviceServers(d);
+          return ss.length ? ss.map(s => `
+            <div class="srv">
+              <span class="si">🗄</span>
+              <div class="smeta">
+                <div class="sname">${s.name} <span class="scode">${s.short}</span></div>
+                <div class="srole">${s.role}</div>
+              </div>
+              <span class="shost">${s.host}</span>
+            </div>`).join('')
+          : `<div class="srv-empty">등록된 서버가 없습니다. (어떤 서버에서도 이 장비를 사용하지 않음)</div>`;
+        })()}
+      </div>
+
+      <div class="section">
+        <h3>콘솔 접속</h3>
+        <div class="console-btns">
+          <a class="web" href="${webUrl}" target="_blank" rel="noopener">웹 콘솔 ↗</a>
+          <a class="ssh" href="${sshUrl}">SSH 접속</a>
+        </div>
+      </div>
+
+      ${adminMode ? `<div class="section">
+        <button class="ghost danger" style="width:100%" onclick="deleteDevice(${d.id})">🗑 이 장비 삭제</button>
+      </div>` : ''}
+
+    </div>`;
+  $('#drawer').classList.add('on');
+  $('#overlay').classList.add('on');
+}
+function closeDrawer() {
+  $('#drawer').classList.remove('on');
+  $('#overlay').classList.remove('on');
+}
+/* 상세에서 즉시 재점검 (POST /ping) → 목록·상세 갱신 */
+async function repingDrawer(id) {
+  try { await api('/firewalls/' + id + '/ping', { method: 'POST' }); }
+  catch (e) { alert('재점검 실패: ' + e.message); return; }
+  await loadFirewalls();
+  render();
+  openDrawer(id);
+}
+function toggleSecret(btn) {
+  const el = btn.parentElement.querySelector('.val');
+  const shown = el.dataset.shown === '1';
+  el.textContent = shown ? '••••••••••••' : el.dataset.real;
+  el.dataset.shown = shown ? '0' : '1';
+}
+function copyVal(btn, val) {
+  navigator.clipboard?.writeText(val);
+  const old = btn.textContent; btn.textContent = '✓';
+  setTimeout(() => btn.textContent = old, 900);
+}
+
+/* ── API 문서 ── */
+function docInfo(d) {
+  const m = d.version.match(/(\d+)\.(\d+)/);
+  const mm = m ? `${m[1]}.${m[2]}` : d.version;
+  const docUrlMap = {
+    Fortinet:   `https://docs.fortinet.com/product/fortigate/${mm}`,
+    Paloalto:   `https://docs.paloaltonetworks.com/pan-os/${mm.replace('.', '-')}/pan-os-panorama-api`,
+    CheckPoint: `https://sc1.checkpoint.com/documents/latest/APIs/`,
+  };
+  const url = docUrlMap[d.vendor] || null;
+  const fileName = `${d.vendor}_REST_API_v${mm}.pdf`;
+  const avail = url ? 'pub' : (mm === '-' || !m ? 'none' : 'int');
+  return { docVersion: mm, url, fileName, avail };
+}
+const AVAIL_LABEL = { pub: '공개 문서', int: '사내 보관', none: '미제공' };
+
+function buildDocs() {
+  const map = new Map();
+  DATA.forEach(d => {
+    const doc = docInfo(d);
+    const key = `${d.vendor}|${doc.docVersion}`;
+    if (!map.has(key)) map.set(key, { vendor: d.vendor, docVersion: doc.docVersion, url: doc.url, fileName: doc.fileName, avail: doc.avail, devices: [] });
+    map.get(key).devices.push(d);
+  });
+  return [...map.values()];
+}
+function getFilteredDocs() {
+  const q = $('#docQ').value.trim().toLowerCase();
+  let docs = buildDocs();
+  if (selectedVendor) docs = docs.filter(g => g.vendor === selectedVendor);
+  if (q) docs = docs.filter(g => `${g.vendor} ${g.docVersion} ${g.fileName}`.toLowerCase().includes(q));
+  docs.sort((a, b) => a.vendor.localeCompare(b.vendor) || a.docVersion.localeCompare(b.docVersion, undefined, { numeric: true }));
+  return docs;
+}
+function renderDocs() {
+  const docs = getFilteredDocs();
+  $('#docRows').innerHTML = docs.map(g => {
+    const devTitle = g.devices.map(d => `${d.alias} (${d.ip})`).join(', ');
+    let action;
+    if (g.avail === 'pub') {
+      action = `<a class="ghost sm" href="${g.url}" target="_blank" rel="noopener">열기 ↗</a>`
+             + `<button class="ghost sm" onclick="downloadDocGroup('${g.vendor}','${g.docVersion}')">다운로드 ⬇</button>`;
+    } else if (g.avail === 'int') {
+      action = `<button class="ghost sm" onclick="downloadDocGroup('${g.vendor}','${g.docVersion}')">다운로드 ⬇</button>`;
+    } else {
+      action = `<button class="ghost sm" disabled title="이 벤더는 API 문서를 제공하지 않습니다">문서 없음</button>`;
+    }
+    return `
+      <tr>
+        <td>${vendorBadge(g.vendor)}</td>
+        <td class="ver">${g.docVersion}</td>
+        <td><span class="doc-pill ${g.avail}">${AVAIL_LABEL[g.avail]}</span></td>
+        <td class="devcnt" title="${devTitle}">${g.devices.length}대</td>
+        <td class="docact">${action}</td>
+      </tr>`;
+  }).join('');
+  $('#docEmpty').style.display = docs.length ? 'none' : 'block';
+  const pub = docs.filter(g => g.avail === 'pub').length;
+  const intn = docs.filter(g => g.avail === 'int').length;
+  const none = docs.filter(g => g.avail === 'none').length;
+  $('#docInfoBar').textContent = docs.length
+    ? `문서 ${docs.length}종 · 공개 ${pub} / 사내 ${intn} / 미제공 ${none}`
+    : '0종';
+}
+function downloadDocGroup(vendor, docVersion) {
+  const g = buildDocs().find(x => x.vendor === vendor && x.docVersion === docVersion);
+  if (!g) return;
+  const body =
+`[목업] ${g.vendor} REST API 문서
+문서 버전: ${g.vendor} ${g.docVersion}
+제공 형태: ${AVAIL_LABEL[g.avail]}
+공개 문서 URL: ${g.url || '없음 (사내 보관본)'}
+적용 장비 (${g.devices.length}대): ${g.devices.map(d => `${d.alias}(${d.ip})`).join(', ')}
+
+실제 구현에서는 이 자리에서 사내 파일서버/오브젝트스토리지에 저장된
+${g.fileName} 을 내려받게 됩니다.`;
+  saveText(g.fileName.replace(/\.pdf$/, '.txt'), body);
+}
+function saveText(filename, body) {
+  const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function resetFilters() {
+  $('#q').value = ''; selectedVendor = ''; $('#status').value = '';
+  page = 1; render();
+}
+
+/* ── 장비 추가 다이얼로그 ── */
+const VENDOR_OPTIONS = ['Fortinet', 'Paloalto', 'Ahnlab', 'Axgate', 'MF2', 'CheckPoint', 'Bluemax', 'NexG', 'WINS', 'SECUI', 'AWS'];
+
+function openAddModal() {
+  $('#addModal').innerHTML = `
+    <div class="modal-head">
+      <h2>장비 추가</h2>
+      <button class="close" onclick="closeAddModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <label class="fld"><span>벤더</span>
+          <select id="f_vendor">${VENDOR_OPTIONS.map(v => `<option>${v}</option>`).join('')}</select></label>
+        <label class="fld"><span>Alias *</span><input id="f_alias" placeholder="예: forti-test" autocomplete="off"></label>
+        <label class="fld"><span>관리 IP *</span><input id="f_ip" placeholder="예: 192.168.0.1" autocomplete="off"></label>
+        <label class="fld"><span>버전</span><input id="f_version" placeholder="예: 7.4.8" autocomplete="off"></label>
+        <label class="fld"><span>관리 포트</span><input id="f_port" type="number" value="443"></label>
+        <label class="fld"><span>관리자 ID</span><input id="f_admin" value="admin" autocomplete="off"></label>
+        <label class="fld"><span>비밀번호</span><input id="f_pw" type="text" placeholder="비밀번호" autocomplete="off"></label>
+        <label class="fld full"><span>REST API Key</span><input id="f_key" placeholder="API 키" autocomplete="off"></label>
+      </div>
+      <div class="form-note">📡 상태는 추가 후 <b>PING</b>으로 자동 확인합니다.<br>🗄 등록 서버는 각 서버 DB를 <b>IP로 매칭</b>해 자동 표시됩니다. (여기서 지정하지 않음)</div>
+      <div class="form-err" id="f_err"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="ghost" onclick="closeAddModal()">취소</button>
+      <button class="btn" onclick="submitAddDevice()">추가</button>
+    </div>`;
+  $('#modalOverlay').classList.add('on');
+  setTimeout(() => $('#f_alias').focus(), 50);
+}
+function closeAddModal() { $('#modalOverlay').classList.remove('on'); }
+function overlayClose(e) { if (e.target.id === 'modalOverlay') closeAddModal(); }
+
+async function submitAddDevice() {
+  const alias = $('#f_alias').value.trim();
+  const ip = $('#f_ip').value.trim();
+  if (!alias || !ip) { $('#f_err').textContent = 'Alias와 관리 IP는 필수 항목입니다.'; return; }
+
+  const body = {
+    vendor: $('#f_vendor').value,
+    alias, ip,
+    mgmt_port: +$('#f_port').value || 443,
+    version: $('#f_version').value.trim() || null,
+    admin_id: $('#f_admin').value.trim() || null,
+    password: $('#f_pw').value || null,
+    api_key: $('#f_key').value.trim() || null,
+  };
+  try {
+    // 백엔드가 추가 직후 PING 까지 수행하고 최종 상태로 응답
+    await api('/firewalls', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  } catch (e) {
+    $('#f_err').textContent = '추가 실패: ' + e.message;   // 예: 이미 등록된 IP
+    return;
+  }
+  closeAddModal();
+  await loadFirewalls();
+  selectedVendor = ''; $('#q').value = ''; $('#status').value = ''; page = 1;
+  if (view !== 'devices') switchView('devices'); else render();
+}
+
+/* ── 다크모드 ── */
+function applyTheme(dark) {
+  document.body.classList.toggle('dark', dark);
+  const btn = $('#themeBtn');
+  if (btn) btn.innerHTML = dark
+    ? '<span class="ni">☀</span><span class="nl">라이트 모드</span>'
+    : '<span class="ni">🌙</span><span class="nl">다크 모드</span>';
+}
+function toggleTheme() {
+  const dark = !document.body.classList.contains('dark');
+  applyTheme(dark);
+  try { localStorage.setItem('fw-theme', dark ? 'dark' : 'light'); } catch (e) {}
+}
+(function initTheme() {
+  let pref = null;
+  try { pref = localStorage.getItem('fw-theme'); } catch (e) {}
+  const prefersDark = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(pref ? pref === 'dark' : prefersDark);
+})();
+
+/* ── 사이드바 접기 ── */
+function toggleSidebar() {
+  const collapsed = document.body.classList.toggle('sidebar-collapsed');
+  try { localStorage.setItem('fw-sidebar', collapsed ? 'collapsed' : 'open'); } catch (e) {}
+}
+(function initSidebar() {
+  let pref = null;
+  try { pref = localStorage.getItem('fw-sidebar'); } catch (e) {}
+  if (pref === 'collapsed') document.body.classList.add('sidebar-collapsed');
+})();
+
+/* ── 이벤트 ── */
+$('#q').addEventListener('input', () => { page = 1; render(); });
+$('#status').addEventListener('change', () => { page = 1; render(); });
+$('#pageSize').addEventListener('change', (e) => { pageSize = +e.target.value; page = 1; render(); });
+$('#docQ').addEventListener('input', () => render());
+document.querySelectorAll('thead th').forEach(th => {
+  if (!th.dataset.k) return;
+  th.addEventListener('click', () => {
+    const k = th.dataset.k;
+    if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = 1; }
+    render();
+  });
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDrawer(); closeAddModal(); closeServerModal(); } });
+
+/* ── 부팅: API에서 장비 로드 후 렌더 ── */
+async function boot() {
+  if (adminMode) document.body.classList.add('admin');
+  try {
+    await loadFirewalls();
+  } catch (e) {
+    $('#rows').innerHTML = `<tr><td colspan="8" class="empty">API 연결 실패: ${e.message}<br>백엔드 서버(run.py)가 실행 중인지 확인하세요.</td></tr>`;
+  }
+  switchView('devices');
+}
+boot();
+</script>
+</body>
+</html>
