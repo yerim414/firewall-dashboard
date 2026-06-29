@@ -4,3 +4,12 @@ __pycache__/
 firewall.db
 .secret_key
 .claude/
+
+# 앱과 무관한 연구/스터디 자료 (repo 미포함)
+Bluemax+Interface,+Zone,+Route.doc
+images/
+paloalto_images/
+share/
+study-notes/
+study-notes-collection/
+study-notes-paloalto/

@@ -88,7 +88,8 @@
     color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none;
     border: none; background: none; width: 100%; text-align: left; font-family: inherit;
   }
-  .nav-item .ni { width: 20px; text-align: center; font-size: 16px; }
+  .nav-item .ni { width: 20px; height: 20px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; }
+  .nav-item .ni svg { width: 20px; height: 20px; }
   .nav-item:hover { background: var(--hover); color: var(--text); }
   .nav-item.active { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
 
@@ -110,6 +111,11 @@
   .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
 
   /* ── KPI ── */
+  .kpi-toggle { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 600; padding: 4px 2px; margin-bottom: 10px; user-select: none; }
+  .kpi-toggle:hover { color: var(--text); }
+  .kpi-toggle .cv { font-size: 11px; transition: transform .15s; }
+  body.kpis-collapsed .kpi-toggle .cv { transform: rotate(-90deg); }
+  body.kpis-collapsed #kpis { display: none; }
   .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 18px; }
   .kpi { padding: 20px; cursor: pointer; transition: transform .12s, box-shadow .12s; }
   .kpi:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(31,28,74,.10); }
@@ -426,10 +432,14 @@
       <span class="brand-name nl">방화벽 관리<span class="admin-badge">ADMIN</span></span>
     </div>
     <nav class="nav">
-      <button class="nav-item active" data-view="devices"   onclick="switchView('devices')" title="장비 목록"><span class="ni">🖥</span><span class="nl">장비 목록</span></button>
-      <button class="nav-item"        data-view="servers"   onclick="switchView('servers')" title="등록 서버"><span class="ni">🗄</span><span class="nl">등록 서버</span></button>
-      <button class="nav-item"        data-view="docs"      onclick="switchView('docs')" title="API 문서"><span class="ni">📄</span><span class="nl">API 문서</span></button>
-      <button class="nav-item"        data-view="stats"     onclick="switchView('stats')" title="통계"><span class="ni">📊</span><span class="nl">통계</span></button>
+      <button class="nav-item active" data-view="devices" onclick="switchView('devices')" title="장비 목록">
+        <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3.5" y1="6" x2="3.51" y2="6"/><line x1="3.5" y1="12" x2="3.51" y2="12"/><line x1="3.5" y1="18" x2="3.51" y2="18"/></svg></span><span class="nl">장비 목록</span></button>
+      <button class="nav-item" data-view="servers" onclick="switchView('servers')" title="등록 서버">
+        <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><line x1="6" y1="7" x2="6.01" y2="7"/><line x1="6" y1="17" x2="6.01" y2="17"/></svg></span><span class="nl">등록 서버</span></button>
+      <button class="nav-item" data-view="docs" onclick="switchView('docs')" title="API 문서">
+        <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span><span class="nl">API 문서</span></button>
+      <button class="nav-item" data-view="stats" onclick="switchView('stats')" title="통계">
+        <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="nl">통계</span></button>
     </nav>
     <div class="nav-foot">
       <button class="nav-item" id="themeBtn" onclick="toggleTheme()" title="다크/라이트 모드"><span class="ni">🌙</span><span class="nl">다크 모드</span></button>
@@ -449,6 +459,9 @@
 
     <!-- 장비 목록 -->
     <section class="view" data-view="devices" hidden>
+      <div class="kpi-toggle" onclick="toggleKpis()" title="상태 요약 접기/펼치기">
+        <span class="cv">▾</span><span>상태 요약</span>
+      </div>
       <div class="kpis" id="kpis"></div>
 
       <div class="card toolbar">
@@ -1275,9 +1288,11 @@ async function submitAddDevice() {
 function applyTheme(dark) {
   document.body.classList.toggle('dark', dark);
   const btn = $('#themeBtn');
+  const sun = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>';
+  const moon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
   if (btn) btn.innerHTML = dark
-    ? '<span class="ni">☀</span><span class="nl">라이트 모드</span>'
-    : '<span class="ni">🌙</span><span class="nl">다크 모드</span>';
+    ? `<span class="ni">${sun}</span><span class="nl">라이트 모드</span>`
+    : `<span class="ni">${moon}</span><span class="nl">다크 모드</span>`;
 }
 function toggleTheme() {
   const dark = !document.body.classList.contains('dark');
@@ -1300,6 +1315,15 @@ function toggleSidebar() {
   let pref = null;
   try { pref = localStorage.getItem('fw-sidebar'); } catch (e) {}
   if (pref === 'collapsed') document.body.classList.add('sidebar-collapsed');
+})();
+
+/* ── KPI 상태 요약 접기 ── */
+function toggleKpis() {
+  const c = document.body.classList.toggle('kpis-collapsed');
+  try { localStorage.setItem('fw-kpis', c ? 'collapsed' : 'open'); } catch (e) {}
+}
+(function initKpis() {
+  try { if (localStorage.getItem('fw-kpis') === 'collapsed') document.body.classList.add('kpis-collapsed'); } catch (e) {}
 })();
 
 /* ── 이벤트 ── */
