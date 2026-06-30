@@ -28,9 +28,28 @@ def session():
         conn.close()
 
 
+# 기존 테이블에 나중에 추가된 컬럼 (없으면 ALTER 로 보강)
+_SERVER_COLS = {
+    "db_type": "TEXT", "db_host": "TEXT", "db_port": "INTEGER", "db_name": "TEXT",
+    "db_user": "TEXT", "db_pass_enc": "BLOB", "db_query": "TEXT", "last_synced_at": "TEXT",
+}
+_SECRET_COLS = {
+    "auth_method": "TEXT", "auth_data_enc": "BLOB",
+}
+
+
+def _add_missing(conn, table, cols):
+    existing = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+    for col, typ in cols.items():
+        if col not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
+
+
 def init_db():
-    """schema.sql 적용 (CREATE TABLE IF NOT EXISTS 라 반복 호출 안전)."""
+    """schema.sql 적용 (CREATE TABLE IF NOT EXISTS 라 반복 호출 안전) + 마이그레이션."""
     with open(SCHEMA_PATH, encoding="utf-8") as f:
         ddl = f.read()
     with session() as conn:
         conn.executescript(ddl)
+        _add_missing(conn, "servers", _SERVER_COLS)
+        _add_missing(conn, "firewall_secrets", _SECRET_COLS)

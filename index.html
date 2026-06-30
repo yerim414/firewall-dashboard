@@ -320,7 +320,7 @@
     transform: translateX(100%); transition: transform .25s ease; overflow-y: auto; z-index: 10;
   }
   .drawer.on { transform: translateX(0); }
-  .drawer .dh { padding: 24px 26px 20px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--card); }
+  .drawer .dh { padding: 24px 26px 20px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--card); z-index: 5; }
   .drawer .dh .top { display: flex; justify-content: space-between; align-items: start; }
   .drawer .dh h2 { margin: 10px 0 3px; font-size: 21px; }
   .drawer .dh .ipline { color: var(--muted); font-family: 'Consolas', monospace; font-size: 13px; }
@@ -328,16 +328,16 @@
   .close:hover { color: var(--text); }
   .dbody { padding: 10px 26px 34px; }
   .section { margin-top: 24px; }
-  .section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 12px; }
+  .section h3 { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 13px; }
   .section h3.sec-head { display: flex; align-items: center; justify-content: space-between; }
-  .section h3.sec-head .ghost.sm { text-transform: none; letter-spacing: 0; }
-  .field { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); gap: 12px; }
+  .section h3.sec-head .ghost.sm { font-weight: 500; }
+  .field { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); gap: 12px; }
   .field:last-child { border-bottom: none; }
-  .field .k { color: var(--muted); font-size: 13px; flex-shrink: 0; }
-  .field .v { font-weight: 500; text-align: right; word-break: break-all; }
-  .field .v.mono { font-family: 'Consolas', monospace; font-size: 13px; }
+  .field .k { color: var(--muted); font-size: 13.5px; flex-shrink: 0; }
+  .field .v { font-weight: 600; font-size: 14px; text-align: right; word-break: break-all; }
+  .field .v.mono { font-family: 'Consolas', monospace; font-size: 13.5px; }
   .secret { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
-  .secret .val { font-family: 'Consolas', monospace; font-size: 13px; }
+  .secret .val { font-family: 'Consolas', monospace; font-size: 13.5px; }
   .eye, .copy { background: var(--chip); border: none; border-radius: 7px; width: 29px; height: 27px; cursor: pointer; color: var(--text); }
   .eye:hover, .copy:hover { background: var(--line); }
   .console-btns { display: flex; gap: 9px; margin-top: 4px; }
@@ -349,7 +349,7 @@
   .console-btns a.web:hover { background: var(--primary-2); }
   .console-btns a.ssh { background: var(--card); color: var(--text); border: 1px solid var(--line); }
   .console-btns a.ssh:hover { background: var(--hover); }
-  .status-banner { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-radius: 11px; margin-top: 4px; font-size: 13px; }
+  .status-banner { display: flex; align-items: center; gap: 12px; padding: 15px 16px; border-radius: 11px; margin-top: 4px; font-size: 14px; }
   .status-banner.up   { background: var(--ok-soft);   color: var(--ok); }
   .status-banner.warn { background: var(--warn-soft); color: var(--warn); }
   .status-banner.down { background: var(--down-soft); color: var(--down); }
@@ -382,7 +382,6 @@
     background: var(--bg); color: var(--text); font-size: 14px; outline: none; font-family: inherit;
   }
   .fld input:focus, .fld select:focus { border-color: var(--primary); background: var(--card); }
-  .form-note { color: var(--muted); font-size: 12.5px; margin-top: 14px; background: var(--chip); padding: 10px 12px; border-radius: 10px; line-height: 1.7; }
 
   /* ── 관리자 모드 ── */
   .brand .logo { cursor: default; user-select: none; }   /* 클릭 가능 티 안 나게 (이스터에그) */
@@ -397,11 +396,15 @@
   .ghost.danger { color: var(--down); border-color: var(--down); }
   .ghost.danger:hover { background: var(--down-soft); }
   .adm-x {
-    border: none; background: var(--chip); color: var(--muted); border-radius: 6px;
-    width: 24px; height: 24px; cursor: pointer; font-size: 13px; line-height: 1; flex-shrink: 0;
+    border: none; background: var(--chip); color: var(--muted); border-radius: 7px;
+    width: 26px; height: 26px; cursor: pointer; font-size: 15px; line-height: 1; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
   }
-  .adm-x:hover { background: var(--down-soft); color: var(--down); }
-  .srv-admin-bar { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+  .adm-x svg { width: 15px; height: 15px; }
+  .adm-x:hover { background: var(--line); color: var(--text); }
+  .adm-x.danger:hover { background: var(--down-soft); color: var(--down); }
+  .srv-actions { display: inline-flex; align-items: center; gap: 6px; }
+  .srv-admin-bar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 14px; }
 
   /* 토스트 */
   #toast {
@@ -412,6 +415,9 @@
   }
   #toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
   .form-err { color: var(--down); font-size: 13px; margin-top: 14px; min-height: 18px; }
+  .db-sec { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 16px; }
+  .db-sec-title { font-size: 13.5px; font-weight: 700; margin-bottom: 12px; }
+  .db-sec-title span { font-weight: 500; color: var(--muted); font-size: 12px; }
 
   @media (max-width: 1080px) {
     .kpis { grid-template-columns: repeat(2, 1fr); }
@@ -476,7 +482,7 @@
           <option value="down">응답없음</option>
         </select>
         <button class="ghost" onclick="resetFilters()">초기화</button>
-        <button class="ghost" id="excelBtn">엑셀 ⬇</button>
+        <button class="ghost" id="excelBtn" onclick="exportCsv()">엑셀 ⬇</button>
       </div>
 
       <div class="row-2col">
@@ -623,7 +629,9 @@ function mapFw(r) {
     expireDays: r.api_key_expire_days, lastSeen: r.last_seen_at || '—',
     apiAuth: r.status === 'down' ? '실패' : '성공',
     servers: r.servers || [],
-    apiKey: r.api_key, password: r.password,   // 상세 응답에서만 채워짐
+    password: r.password,                       // 상세 응답에서만
+    authMethod: r.auth_method || 'api_key',
+    auth: r.auth || {},                         // {field: value} (상세 응답에서만)
   };
 }
 async function loadFirewalls() {
@@ -643,6 +651,7 @@ let selectedVendor = '';
 let view = 'devices';
 const openVendors = new Set();
 const expandedServers = new Set();   // 비어있음 = 전부 접힘(기본)
+let serversCache = [];               // /api/servers 응답 캐시 (편집 모달용)
 const $ = (s) => document.querySelector(s);
 
 /* ── 관리자 모드 (로고 1.5초 내 5연타로 토글) ── */
@@ -694,9 +703,16 @@ async function renderServers() {
   let servers;
   try { servers = await api('/servers'); }
   catch (e) { $('#serverList').innerHTML = `<div class="empty">서버 정보를 불러오지 못했습니다: ${e.message}</div>`; return; }
+  serversCache = servers;
 
+  const SI = {
+    plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+    sync: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
+    edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>`,
+    trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+  };
   const admX = (sid, ip) => adminMode
-    ? `<button class="adm-x" title="등록 해제" onclick="event.stopPropagation(); unregisterIp('${sid}','${ip}')">×</button>` : '';
+    ? `<button class="adm-x danger" title="등록 해제" onclick="event.stopPropagation(); unregisterIp('${sid}','${ip}')">×</button>` : '';
 
   const cards = servers.map(s => {
     const collapsed = !expandedServers.has(s.id);
@@ -705,26 +721,33 @@ async function renderServers() {
         ${vendorBadge(d.vendor)}
         <span class="srv-dev-name">${d.alias}</span>
         <span class="srv-dev-ip">${d.ip}</span>
-        <span class="pill ${d.status}" style="margin-left:auto">${STATUS_LABEL[d.status]}</span>
+        <span style="margin-left:auto"></span>
         ${admX(s.id, d.ip)}
       </div>`).join('')
     + s.orphan.map(ip => `
-      <div class="srv-dev orphan" title="서버 DB에는 있지만 장비 목록(인벤토리)에 없는 IP">
-        <span class="srv-chip none">인벤토리 없음</span>
+      <div class="srv-dev orphan" title="이 대시보드 장비 목록에 없는 IP (서버 DB에만 존재)">
+        <span class="srv-chip none">미관리</span>
         <span class="srv-dev-ip">${ip}</span>
         <span style="margin-left:auto"></span>
         ${admX(s.id, ip)}
       </div>`).join('');
-    const adminHead = adminMode ? `
-      <button class="ghost sm adm" onclick="event.stopPropagation(); openRegPrompt('${s.id}')">＋방화벽</button>
-      <button class="adm-x adm" title="서버 삭제" onclick="event.stopPropagation(); deleteServer('${s.id}','${s.name}')">🗑</button>` : '';
+    const dbBtn = s.db_type
+      ? `<button class="adm-x" title="DB에서 동기화" onclick="event.stopPropagation(); syncServer('${s.id}')">${SI.sync}</button>` : '';
+    const adminHead = adminMode ? `<span class="srv-actions">
+      ${dbBtn}
+      <button class="adm-x" title="방화벽 IP 수동 등록" onclick="event.stopPropagation(); openRegPrompt('${s.id}')">${SI.plus}</button>
+      <button class="adm-x" title="서버·DB 편집" onclick="event.stopPropagation(); openServerModal('${s.id}')">${SI.edit}</button>
+      <button class="adm-x danger" title="서버 삭제" onclick="event.stopPropagation(); deleteServer('${s.id}')">${SI.trash}</button>
+    </span>` : '';
+    const dbInfo = s.db_type
+      ? ` · DB:${s.db_type}${s.last_synced_at ? ' · 동기화 ' + s.last_synced_at.slice(5, 16) : ' · 미동기화'}` : '';
     return `
       <div class="card panel srv-card ${collapsed ? 'collapsed' : ''}">
         <div class="srv-head" onclick="toggleServer('${s.id}')">
           <span class="si big">🗄</span>
           <div class="srv-h-meta">
             <div class="srv-h-name">${s.name} <span class="scode">${s.short}</span></div>
-            <div class="srv-h-sub">${s.role} · ${s.host}</div>
+            <div class="srv-h-sub">${s.role || '-'} · ${s.host}${dbInfo}</div>
           </div>
           <span class="srv-h-cnt">${s.registered_count}대${s.orphan.length ? ` · 미매칭 ${s.orphan.length}` : ''}</span>
           ${adminHead}
@@ -737,7 +760,7 @@ async function renderServers() {
   }).join('');
 
   const adminBar = adminMode
-    ? `<div class="srv-admin-bar"><button class="btn" onclick="openServerModal()">+ 서버 추가</button></div>` : '';
+    ? `<div class="srv-admin-bar"><button class="ghost" onclick="openAccountModal()">🔑 공통 DB 계정</button><button class="btn" onclick="openServerModal()">+ 서버 추가</button></div>` : '';
   $('#serverList').innerHTML = adminBar + `<div class="server-grid">${cards}</div>`;
 }
 function toggleServer(id) {
@@ -759,40 +782,118 @@ function unregisterIp(sid, ip) {
     .then(() => { toast('해제됨'); loadFirewalls(); renderServers(); })
     .catch(e => alert('해제 실패: ' + e.message));
 }
-function deleteServer(sid, name) {
-  if (!confirm(`서버 "${name}" 을(를) 삭제할까요? (등록 정보도 함께 삭제)`)) return;
+function deleteServer(sid) {
+  const s = serversCache.find(x => x.id === sid);
+  if (!confirm(`서버 "${s ? s.name : sid}" 을(를) 삭제할까요? (등록 정보도 함께 삭제)`)) return;
   api(`/servers/${sid}`, { method: 'DELETE' })
     .then(() => { toast('서버 삭제됨'); renderServers(); })
     .catch(e => alert('삭제 실패: ' + e.message));
 }
-function openServerModal() {
+/* DB에서 동기화 */
+async function syncServer(sid) {
+  toast('동기화 중…');
+  try {
+    const r = await api(`/servers/${sid}/sync`, { method: 'POST' });
+    toast(`동기화 완료 · ${r.synced}개 읽어옴`);
+  } catch (e) { alert('동기화 실패: ' + e.message); }
+  expandedServers.add(sid);
+  await loadFirewalls();
+  renderServers();
+}
+/* 서버 추가/편집 모달 (sid 있으면 편집) */
+function openServerModal(sid) {
+  const s = sid ? serversCache.find(x => x.id === sid) : null;
+  const edit = !!s;
+  const dbtypeOpt = `
+    <option value="" ${!edit || !s.db_type ? 'selected' : ''}>없음 (수동 등록)</option>
+    <option value="postgresql" ${edit && s.db_type === 'postgresql' ? 'selected' : ''}>PostgreSQL</option>
+    <option value="mysql" ${edit && s.db_type === 'mysql' ? 'selected' : ''}>MySQL / MariaDB</option>`;
+  const v = (k) => edit ? escAttr(s[k] || '') : '';
   $('#srvModal').innerHTML = `
-    <div class="modal-head"><h2>서버 추가</h2><button class="close" onclick="closeServerModal()">×</button></div>
+    <div class="modal-head"><h2>${edit ? '서버 편집' : '서버 추가'}</h2><button class="close" onclick="closeServerModal()">×</button></div>
     <div class="modal-body">
       <div class="form-grid">
-        <label class="fld"><span>서버 ID *</span><input id="s_id" placeholder="예: mgmt-02" autocomplete="off"></label>
-        <label class="fld"><span>약칭 *</span><input id="s_short" placeholder="예: NMS2" autocomplete="off"></label>
-        <label class="fld full"><span>이름 *</span><input id="s_name" placeholder="예: 통합관제 NMS #2" autocomplete="off"></label>
-        <label class="fld"><span>호스트 *</span><input id="s_host" placeholder="예: 10.10.10.12" autocomplete="off"></label>
-        <label class="fld"><span>역할</span><input id="s_role" placeholder="예: 상태 모니터링" autocomplete="off"></label>
+        ${edit ? '' : `<label class="fld"><span>서버 ID *</span><input id="s_id" placeholder="예: withflow" autocomplete="off"></label>`}
+        <label class="fld"><span>약칭 *</span><input id="s_short" value="${v('short')}" placeholder="예: WF" autocomplete="off"></label>
+        <label class="fld ${edit ? 'full' : ''}"><span>이름 *</span><input id="s_name" value="${v('name')}" placeholder="예: withFlow 연동 서버" autocomplete="off"></label>
+        <label class="fld"><span>호스트 *</span><input id="s_host" value="${v('host')}" placeholder="예: 10.0.0.5" autocomplete="off"></label>
+        <label class="fld"><span>역할</span><input id="s_role" value="${v('role')}" autocomplete="off"></label>
+      </div>
+      <div class="db-sec">
+        <div class="db-sec-title">DB 연동 <span>· 설정하면 그 DB에서 방화벽 IP를 자동 동기화 (선택)</span></div>
+        <div class="form-grid">
+          <label class="fld"><span>DB 종류</span><select id="s_dbtype">${dbtypeOpt}</select></label>
+          <label class="fld"><span>DB 호스트</span><input id="s_dbhost" value="${v('db_host')}" placeholder="예: 10.0.0.5" autocomplete="off"></label>
+          <label class="fld"><span>포트</span><input id="s_dbport" type="number" value="${edit && s.db_port ? s.db_port : ''}" placeholder="5432 / 3306"></label>
+          <label class="fld"><span>DB명</span><input id="s_dbname" value="${v('db_name')}" autocomplete="off"></label>
+          <label class="fld"><span>계정 <span style="font-weight:400;color:var(--muted)">(비우면 공통)</span></span><input id="s_dbuser" value="${v('db_user')}" autocomplete="off"></label>
+          <label class="fld"><span>비밀번호</span><input id="s_dbpass" type="password" placeholder="${edit && s.has_db_pass ? '변경 시에만' : '비우면 공통 계정'}" autocomplete="new-password"></label>
+          <label class="fld full"><span>추출 쿼리 <span style="font-weight:400;color:var(--muted)">(첫 컬럼=IP)</span></span><input id="s_dbquery" value="${v('db_query')}" placeholder="SELECT ip FROM fw_list WHERE use_yn='Y'" autocomplete="off"></label>
+        </div>
       </div>
       <div class="form-err" id="s_err"></div>
     </div>
-    <div class="modal-foot"><button class="ghost" onclick="closeServerModal()">취소</button><button class="btn" onclick="submitServer()">추가</button></div>`;
+    <div class="modal-foot">
+      <button class="ghost" onclick="closeServerModal()">취소</button>
+      <button class="btn" onclick="submitServer(${edit ? `'${s.id}'` : 'null'})">${edit ? '저장' : '추가'}</button>
+    </div>`;
   $('#srvModalOverlay').classList.add('on');
-  setTimeout(() => $('#s_id').focus(), 50);
+  setTimeout(() => (edit ? $('#s_short') : $('#s_id')).focus(), 50);
 }
 function closeServerModal() { $('#srvModalOverlay').classList.remove('on'); }
 function srvOverlayClose(e) { if (e.target.id === 'srvModalOverlay') closeServerModal(); }
-async function submitServer() {
-  const id = $('#s_id').value.trim(), short = $('#s_short').value.trim(),
-        name = $('#s_name').value.trim(), host = $('#s_host').value.trim();
-  if (!id || !short || !name || !host) { $('#s_err').textContent = 'ID·약칭·이름·호스트는 필수입니다.'; return; }
+async function submitServer(sid) {
+  const g = (id) => $('#' + id).value.trim();
+  const short = g('s_short'), name = g('s_name'), host = g('s_host');
+  if (!short || !name || !host || (!sid && !g('s_id'))) { $('#s_err').textContent = 'ID·약칭·이름·호스트는 필수입니다.'; return; }
+  const body = {
+    short, name, host, role: g('s_role') || null,
+    db_type: $('#s_dbtype').value || null,
+    db_host: g('s_dbhost') || null,
+    db_port: +$('#s_dbport').value || null,
+    db_name: g('s_dbname') || null,
+    db_user: g('s_dbuser') || null,
+    db_query: g('s_dbquery') || null,
+  };
+  const pass = $('#s_dbpass').value;
+  if (pass) body.db_pass = pass;
   try {
-    await api('/servers', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, short, name, host, role: $('#s_role').value.trim() || null }) });
-  } catch (e) { $('#s_err').textContent = '추가 실패: ' + e.message; return; }
-  closeServerModal(); toast('서버 추가됨'); renderServers();
+    if (sid) {
+      await api('/servers/' + sid, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    } else {
+      body.id = g('s_id');
+      await api('/servers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    }
+  } catch (e) { $('#s_err').textContent = (sid ? '저장' : '추가') + ' 실패: ' + e.message; return; }
+  closeServerModal(); toast(sid ? '서버 저장됨' : '서버 추가됨'); renderServers();
+}
+/* 공통 DB 계정 (모든 서버 동기화에 기본 사용) */
+async function openAccountModal() {
+  let cur = { db_account_user: '', has_db_account_pass: false };
+  try { cur = await api('/settings'); } catch (e) {}
+  $('#srvModal').innerHTML = `
+    <div class="modal-head"><h2>공통 DB 계정</h2><button class="close" onclick="closeServerModal()">×</button></div>
+    <div class="modal-body">
+      <p style="color:var(--muted);font-size:13px;margin:0 0 14px;line-height:1.6">모든 서버 DB 동기화에 공통으로 쓰는 <b>읽기전용 계정</b>입니다. (서버별로 계정을 따로 입력하면 그게 우선)</p>
+      <div class="form-grid">
+        <label class="fld full"><span>계정 (user)</span><input id="a_user" value="${escAttr(cur.db_account_user || '')}" placeholder="예: fw_reader" autocomplete="off"></label>
+        <label class="fld full"><span>비밀번호</span><input id="a_pass" type="password" placeholder="${cur.has_db_account_pass ? '변경 시에만 입력' : ''}" autocomplete="new-password"></label>
+      </div>
+      <div class="form-err" id="a_err"></div>
+    </div>
+    <div class="modal-foot"><button class="ghost" onclick="closeServerModal()">취소</button><button class="btn" onclick="submitAccount()">저장</button></div>`;
+  $('#srvModalOverlay').classList.add('on');
+  setTimeout(() => $('#a_user').focus(), 50);
+}
+async function submitAccount() {
+  const user = $('#a_user').value.trim();
+  if (!user) { $('#a_err').textContent = '계정(user)은 필수입니다.'; return; }
+  const body = { user };
+  const pass = $('#a_pass').value;
+  if (pass) body.password = pass;
+  try { await api('/settings/db-account', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
+  catch (e) { $('#a_err').textContent = '저장 실패: ' + e.message; return; }
+  closeServerModal(); toast('공통 DB 계정 저장됨');
 }
 function deleteDevice(id) {
   if (!confirm('이 장비를 삭제할까요?')) return;
@@ -1048,17 +1149,6 @@ async function openDrawer(id) {
     <div class="dbody">
 
       <div class="section">
-        <h3 class="sec-head">상태 <button class="ghost sm" onclick="repingDrawer(${d.id})">재점검 ↻</button></h3>
-        <div class="status-banner ${d.status}">
-          <span class="pill ${d.status}">${STATUS_LABEL[d.status]}</span>
-          <span class="desc">${STATUS_DESC[d.status]}</span>
-        </div>
-        <div class="field"><span class="k">마지막 수집</span><span class="v">${d.lastSeen}</span></div>
-        <div class="field"><span class="k">API 인증</span><span class="v">${d.apiAuth}</span></div>
-        <div class="field"><span class="k">API 키 만료</span><span class="v">${d.expireDays > 0 ? 'D-' + d.expireDays : '만료/미확인'}</span></div>
-      </div>
-
-      <div class="section">
         <h3>장비 정보</h3>
         <div class="field"><span class="k">벤더</span><span class="v">${d.vendor}</span></div>
         <div class="field"><span class="k">버전</span><span class="v">${d.version}</span></div>
@@ -1071,11 +1161,15 @@ async function openDrawer(id) {
         <div class="field"><span class="k">관리 포트</span><span class="v mono">${d.mgmtPort}</span></div>
         <div class="field"><span class="k">관리자 ID</span><span class="v mono">${d.adminId}</span></div>
         ${secretField('비밀번호', d.password || '')}
-        ${secretField('REST API Key', d.apiKey || '')}
+        <div class="field"><span class="k">인증 방식</span><span class="v">${(AUTH_METHODS[d.authMethod] || AUTH_METHODS.api_key).label}</span></div>
+        ${(AUTH_METHODS[d.authMethod] || AUTH_METHODS.api_key).fields.map(f => {
+          const val = (d.auth || {})[f.key] || '';
+          return f.secret ? secretField(f.label, val) : `<div class="field"><span class="k">${f.label}</span><span class="v mono">${val || '-'}</span></div>`;
+        }).join('')}
       </div>
 
       <div class="section">
-        <h3>등록 서버 <span style="text-transform:none;font-weight:500;color:var(--muted)">· IP 매칭 결과 · API 키 변경 시 갱신처</span></h3>
+        <h3>등록 서버</h3>
         ${(() => {
           const ss = deviceServers(d);
           return ss.length ? ss.map(s => `
@@ -1087,7 +1181,7 @@ async function openDrawer(id) {
               </div>
               <span class="shost">${s.host}</span>
             </div>`).join('')
-          : `<div class="srv-empty">등록된 서버가 없습니다. (어떤 서버에서도 이 장비를 사용하지 않음)</div>`;
+          : `<div class="srv-empty">없음</div>`;
         })()}
       </div>
 
@@ -1099,8 +1193,9 @@ async function openDrawer(id) {
         </div>
       </div>
 
-      ${adminMode ? `<div class="section">
-        <button class="ghost danger" style="width:100%" onclick="deleteDevice(${d.id})">🗑 이 장비 삭제</button>
+      ${adminMode ? `<div class="section" style="display:flex; gap:10px">
+        <button class="ghost" style="flex:1" onclick="openEditModal(${d.id})">✏ 수정</button>
+        <button class="ghost danger" style="flex:1" onclick="deleteDevice(${d.id})">🗑 삭제</button>
       </div>` : ''}
 
     </div>`;
@@ -1223,8 +1318,83 @@ function resetFilters() {
   page = 1; render();
 }
 
+/* ── 엑셀(CSV) 내보내기 — 현재 검색·필터 결과 그대로 ── */
+function csvCell(v) {
+  const s = String(v ?? '');
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function exportCsv() {
+  const rows = getFiltered();
+  if (!rows.length) { toast('내보낼 데이터가 없습니다'); return; }
+  const header = ['ID', 'Vendor', 'IP', 'Alias', 'Version', '상태', '등록서버'];
+  const lines = [header.join(',')];
+  rows.forEach(d => {
+    const servers = (d.servers || []).map(s => s.short).join(' / ');
+    lines.push([d.id, d.vendor, d.ip, d.alias, d.version, STATUS_LABEL[d.status] || d.status, servers].map(csvCell).join(','));
+  });
+  // Excel 한글 깨짐 방지용 UTF-8 BOM
+  const today = new Date().toISOString().slice(0, 10);
+  saveText(`방화벽_목록_${today}.csv`, '﻿' + lines.join('\r\n'));
+  toast(`${rows.length}건 내보냄`);
+}
+
 /* ── 장비 추가 다이얼로그 ── */
-const VENDOR_OPTIONS = ['Fortinet', 'Paloalto', 'Ahnlab', 'Axgate', 'MF2', 'CheckPoint', 'Bluemax', 'NexG', 'WINS', 'SECUI', 'AWS'];
+const VENDOR_OPTIONS = ['Fortinet', 'Paloalto', 'Ahnlab', 'Axgate', 'MF2', 'CheckPoint', 'Bluemax', 'NexG', 'WINS', 'Future', 'AWS'];
+
+/* 인증 방식 정의 — 방식에 따라 입력 필드가 바뀐다 */
+const AUTH_METHODS = {
+  api_key:       { label: 'REST API Key',          fields: [{ key: 'api_key', label: 'REST API Key', secret: true }] },
+  client_secret: { label: 'Client ID + Secret Key', fields: [{ key: 'client_id', label: 'Client ID' }, { key: 'secret_key', label: 'Secret Key', secret: true }] },
+  userpass:      { label: 'API ID + 비밀번호',     fields: [{ key: 'api_user', label: 'API 사용자' }, { key: 'api_password', label: 'API 비밀번호', secret: true }] },
+  token:         { label: 'Bearer Token',           fields: [{ key: 'token', label: 'Token', secret: true }] },
+  idpw_ports:    { label: '공통 ID/PW + API·SSH 포트', fields: [{ key: 'api_port', label: 'API 포트', placeholder: '443' }, { key: 'ssh_port', label: 'SSH 포트', placeholder: '22' }] },
+  idpw_apiport:  { label: '공통 ID/PW + API 포트', fields: [{ key: 'api_port', label: 'API 포트' }] },
+  none:          { label: '공통 ID/PW만 (API 키 불필요)', fields: [] },
+};
+// 벤더 → 기본 인증 방식 (미지정이면 api_key)
+const VENDOR_AUTH = {
+  Fortinet: 'api_key',
+  Axgate: 'none',
+  Bluemax: 'client_secret',
+  Ahnlab: 'client_secret',
+  Paloalto: 'idpw_ports',
+  MF2: 'idpw_apiport',
+  NexG: 'none',
+  Future: 'none',
+  WINS: 'api_key',
+  CheckPoint: 'none',
+  AWS: 'none',
+};
+
+function renderAuthFields(method, values) {
+  const m = AUTH_METHODS[method] || AUTH_METHODS.api_key;
+  if (!m.fields.length) return `<div class="srv-empty" style="grid-column:1/-1">추가 인증 정보 없음 (공통 ID/PW 사용)</div>`;
+  return m.fields.map(f => `
+    <label class="fld full"><span>${f.label}</span>
+      <input id="auth_${f.key}" type="${f.secret ? 'password' : 'text'}" value="${escAttr((values || {})[f.key] || '')}" placeholder="${escAttr(f.placeholder || '')}" autocomplete="${f.secret ? 'new-password' : 'off'}"></label>`).join('');
+}
+/* 인증 방식은 벤더가 자동으로 결정 — 수동 선택 없이 라벨로만 표시, 방식값은 hidden */
+function authSection(method, values) {
+  const m = AUTH_METHODS[method] || AUTH_METHODS.api_key;
+  return `
+    <div class="db-sec" id="authSec">
+      <div class="db-sec-title">API 인증 <span>· ${m.label}</span></div>
+      <input type="hidden" id="f_authmethod" value="${method}">
+      <div class="form-grid" id="authFields">${renderAuthFields(method, values)}</div>
+    </div>`;
+}
+/* 벤더 변경 시 그 벤더의 인증 방식으로 섹션 자동 교체 */
+function onVendorChange() {
+  const m = VENDOR_AUTH[$('#f_vendor').value] || 'api_key';
+  $('#authSec').outerHTML = authSection(m, {});
+}
+function collectAuth() {
+  const method = $('#f_authmethod').value;
+  const m = AUTH_METHODS[method] || AUTH_METHODS.api_key;
+  const auth = {};
+  m.fields.forEach(f => { const el = $('#auth_' + f.key); if (el && el.value.trim()) auth[f.key] = el.value.trim(); });
+  return { auth_method: method, auth };
+}
 
 function openAddModal() {
   $('#addModal').innerHTML = `
@@ -1235,16 +1405,15 @@ function openAddModal() {
     <div class="modal-body">
       <div class="form-grid">
         <label class="fld"><span>벤더</span>
-          <select id="f_vendor">${VENDOR_OPTIONS.map(v => `<option>${v}</option>`).join('')}</select></label>
+          <select id="f_vendor" onchange="onVendorChange()">${VENDOR_OPTIONS.map(v => `<option>${v}</option>`).join('')}</select></label>
         <label class="fld"><span>Alias *</span><input id="f_alias" placeholder="예: forti-test" autocomplete="off"></label>
         <label class="fld"><span>관리 IP *</span><input id="f_ip" placeholder="예: 192.168.0.1" autocomplete="off"></label>
         <label class="fld"><span>버전</span><input id="f_version" placeholder="예: 7.4.8" autocomplete="off"></label>
         <label class="fld"><span>관리 포트</span><input id="f_port" type="number" value="443"></label>
         <label class="fld"><span>관리자 ID</span><input id="f_admin" value="admin" autocomplete="off"></label>
-        <label class="fld"><span>비밀번호</span><input id="f_pw" type="text" placeholder="비밀번호" autocomplete="off"></label>
-        <label class="fld full"><span>REST API Key</span><input id="f_key" placeholder="API 키" autocomplete="off"></label>
+        <label class="fld"><span>비밀번호</span><input id="f_pw" type="text" placeholder="콘솔/SSH 비밀번호" autocomplete="off"></label>
       </div>
-      <div class="form-note">📡 상태는 추가 후 <b>PING</b>으로 자동 확인합니다.<br>🗄 등록 서버는 각 서버 DB를 <b>IP로 매칭</b>해 자동 표시됩니다. (여기서 지정하지 않음)</div>
+      ${authSection('api_key', {})}
       <div class="form-err" id="f_err"></div>
     </div>
     <div class="modal-foot">
@@ -1269,7 +1438,7 @@ async function submitAddDevice() {
     version: $('#f_version').value.trim() || null,
     admin_id: $('#f_admin').value.trim() || null,
     password: $('#f_pw').value || null,
-    api_key: $('#f_key').value.trim() || null,
+    ...collectAuth(),
   };
   try {
     // 백엔드가 추가 직후 PING 까지 수행하고 최종 상태로 응답
@@ -1282,6 +1451,49 @@ async function submitAddDevice() {
   await loadFirewalls();
   selectedVendor = ''; $('#q').value = ''; $('#status').value = ''; page = 1;
   if (view !== 'devices') switchView('devices'); else render();
+}
+
+/* ── 장비 수정 (관리자) ── */
+function escAttr(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+async function openEditModal(id) {
+  let d;
+  try { d = mapFw(await api('/firewalls/' + id)); }
+  catch (e) { alert('불러오기 실패: ' + e.message); return; }
+  const vopts = VENDOR_OPTIONS.map(v => `<option ${v === d.vendor ? 'selected' : ''}>${v}</option>`).join('');
+  $('#addModal').innerHTML = `
+    <div class="modal-head"><h2>장비 수정</h2><button class="close" onclick="closeAddModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <label class="fld"><span>벤더</span><select id="f_vendor" onchange="onVendorChange()">${vopts}</select></label>
+        <label class="fld"><span>Alias *</span><input id="f_alias" value="${escAttr(d.alias)}" autocomplete="off"></label>
+        <label class="fld"><span>관리 IP *</span><input id="f_ip" value="${escAttr(d.ip)}" autocomplete="off"></label>
+        <label class="fld"><span>버전</span><input id="f_version" value="${escAttr(d.version === '-' ? '' : d.version)}" autocomplete="off"></label>
+        <label class="fld"><span>관리 포트</span><input id="f_port" type="number" value="${d.mgmtPort}"></label>
+        <label class="fld"><span>관리자 ID</span><input id="f_admin" value="${escAttr(d.adminId === '-' ? '' : d.adminId)}" autocomplete="off"></label>
+        <label class="fld"><span>비밀번호</span><input id="f_pw" type="text" value="${escAttr(d.password)}" autocomplete="off"></label>
+      </div>
+      ${authSection(d.authMethod, d.auth)}
+      <div class="form-err" id="f_err"></div>
+    </div>
+    <div class="modal-foot"><button class="ghost" onclick="closeAddModal()">취소</button><button class="btn" onclick="submitEditDevice(${id})">저장</button></div>`;
+  $('#modalOverlay').classList.add('on');
+  setTimeout(() => $('#f_alias').focus(), 50);
+}
+async function submitEditDevice(id) {
+  const alias = $('#f_alias').value.trim(), ip = $('#f_ip').value.trim();
+  if (!alias || !ip) { $('#f_err').textContent = 'Alias와 관리 IP는 필수 항목입니다.'; return; }
+  const body = {
+    vendor: $('#f_vendor').value, alias, ip,
+    mgmt_port: +$('#f_port').value || 443,
+    version: $('#f_version').value.trim() || null,
+    admin_id: $('#f_admin').value.trim() || null,
+    password: $('#f_pw').value || null,
+    ...collectAuth(),
+  };
+  try {
+    await api('/firewalls/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  } catch (e) { $('#f_err').textContent = '저장 실패: ' + e.message; return; }
+  closeAddModal(); toast('수정됨'); await loadFirewalls(); render(); openDrawer(id);
 }
 
 /* ── 다크모드 ── */
