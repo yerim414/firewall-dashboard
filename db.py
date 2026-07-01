@@ -36,6 +36,9 @@ _SERVER_COLS = {
 _SECRET_COLS = {
     "auth_method": "TEXT", "auth_data_enc": "BLOB",
 }
+_FIREWALL_COLS = {
+    "description": "TEXT",
+}
 
 
 def _add_missing(conn, table, cols):
@@ -53,3 +56,4 @@ def init_db():
         conn.executescript(ddl)
         _add_missing(conn, "servers", _SERVER_COLS)
         _add_missing(conn, "firewall_secrets", _SECRET_COLS)
+        _add_missing(conn, "firewalls", _FIREWALL_COLS)

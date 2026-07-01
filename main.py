@@ -99,6 +99,7 @@ class NewFirewall(BaseModel):
     mgmt_port: int = 443
     version: str | None = None
     admin_id: str | None = None
+    description: str | None = None         # 자유 메모
     password: str | None = None            # 콘솔/SSH 비밀번호
     auth_method: str | None = "api_key"    # API 인증 방식
     auth: dict | None = None               # {field: value}
@@ -110,9 +111,9 @@ def create_firewall(body: NewFirewall):
     with db.session() as conn:
         try:
             cur = conn.execute(
-                """INSERT INTO firewalls(vendor, alias, ip, mgmt_port, version, admin_id, status)
-                   VALUES (?, ?, ?, ?, ?, ?, 'checking')""",
-                (body.vendor, body.alias, body.ip, body.mgmt_port, body.version, body.admin_id),
+                """INSERT INTO firewalls(vendor, alias, ip, mgmt_port, version, admin_id, description, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 'checking')""",
+                (body.vendor, body.alias, body.ip, body.mgmt_port, body.version, body.admin_id, body.description),
             )
         except sqlite3.IntegrityError:
             raise HTTPException(409, "이미 등록된 IP입니다")
@@ -134,6 +135,7 @@ class EditFirewall(BaseModel):
     mgmt_port: int | None = None
     version: str | None = None
     admin_id: str | None = None
+    description: str | None = None
     password: str | None = None
     auth_method: str | None = None
     auth: dict | None = None
@@ -147,7 +149,7 @@ def update_firewall(fid: int, body: EditFirewall):
         if not conn.execute("SELECT 1 FROM firewalls WHERE id = ?", (fid,)).fetchone():
             raise HTTPException(404, "장비를 찾을 수 없습니다")
         # firewalls 테이블 컬럼 갱신
-        cols = {k: data[k] for k in ("vendor", "alias", "ip", "mgmt_port", "version", "admin_id") if k in data}
+        cols = {k: data[k] for k in ("vendor", "alias", "ip", "mgmt_port", "version", "admin_id", "description") if k in data}
         if cols:
             sets = ", ".join(f"{k} = ?" for k in cols)
             try:

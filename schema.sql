@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS firewalls (
   mgmt_port    INTEGER NOT NULL DEFAULT 443,
   version      TEXT,
   admin_id     TEXT,
+  description  TEXT,                                -- 자유 메모/설명
   status       TEXT    NOT NULL DEFAULT 'checking', -- up|warn|down|checking (최신 health 캐시)
   last_seen_at TEXT,                                -- 마지막 정상 수집 시각
   created_at   TEXT    NOT NULL DEFAULT (datetime('now')),

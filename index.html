@@ -626,6 +626,7 @@ function mapFw(r) {
   return {
     id: r.id, vendor: r.vendor, ip: r.ip, alias: r.alias, version: r.version || '-',
     status: r.status, mgmtPort: r.mgmt_port, adminId: r.admin_id || '-',
+    description: r.description || '',
     expireDays: r.api_key_expire_days, lastSeen: r.last_seen_at || '—',
     apiAuth: r.status === 'down' ? '실패' : '성공',
     servers: r.servers || [],
@@ -645,7 +646,7 @@ const VIEW_META = {
   stats:     { title: '통계',       sub: '상태 · 벤더 · 문서 분포' },
 };
 
-let sortKey = 'id', sortDir = 1;
+let sortKey = 'id', sortDir = -1;   // 기본: ID 내림차순 (새 장비가 위로)
 let page = 1, pageSize = 10;
 let selectedVendor = '';
 let view = 'devices';
@@ -654,22 +655,39 @@ const expandedServers = new Set();   // 비어있음 = 전부 접힘(기본)
 let serversCache = [];               // /api/servers 응답 캐시 (편집 모달용)
 const $ = (s) => document.querySelector(s);
 
-/* ── 관리자 모드 (로고 1.5초 내 5연타로 토글) ── */
+/* ── 관리자 모드 (로고 1.5초 내 5연타 + 비밀번호) ── */
+// ⚠️ 클라이언트 측 소프트 게이트 — 평문 대신 해시만 저장 (완벽한 보안 아님, 눈에 안 띄게 가림)
+const ADMIN_PW_HASH = '6335a3b5';
+function pwHash(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(h, 33) + s.charCodeAt(i)) >>> 0;
+  return h.toString(16);
+}
 let adminMode = sessionStorage.getItem('fw-admin') === '1';
 let logoClicks = 0, logoTimer = null;
 function logoTap() {
   logoClicks++;
   clearTimeout(logoTimer);
   logoTimer = setTimeout(() => { logoClicks = 0; }, 1500);
-  if (logoClicks >= 5) { logoClicks = 0; setAdmin(!adminMode); }
+  if (logoClicks < 5) return;
+  logoClicks = 0;
+  if (adminMode) { setAdmin(false); return; }        // 끄는 건 비번 불필요
+  const pw = prompt('관리자 비밀번호');
+  if (pw === null) return;                            // 취소
+  if (pwHash('fw-admin::' + pw) === ADMIN_PW_HASH) setAdmin(true);
+  else toast('비밀번호가 틀렸습니다');
 }
 function setAdmin(on) {
   adminMode = on;
   sessionStorage.setItem('fw-admin', on ? '1' : '0');
   document.body.classList.toggle('admin', on);
+  updateAddBtn();                                     // 장비 추가 버튼은 관리자만
   toast(on ? '🔓 관리자 모드 ON' : '🔒 관리자 모드 OFF');
   render();
   if (view === 'devices') closeDrawer();
+}
+function updateAddBtn() {
+  $('#addBtn').style.display = (view === 'devices' && adminMode) ? '' : 'none';
 }
 let toastTimer = null;
 function toast(msg) {
@@ -687,7 +705,7 @@ function switchView(v) {
   document.querySelectorAll('.view').forEach(s => s.hidden = s.dataset.view !== v);
   $('#pageTitle').textContent = VIEW_META[v].title;
   $('#pageSub').textContent = VIEW_META[v].sub;
-  $('#addBtn').style.display = v === 'devices' ? '' : 'none';   // 장비 추가는 장비 목록에서만
+  updateAddBtn();                                    // 장비 추가는 장비 목록 + 관리자만
   render();
 }
 
@@ -1153,6 +1171,7 @@ async function openDrawer(id) {
         <div class="field"><span class="k">벤더</span><span class="v">${d.vendor}</span></div>
         <div class="field"><span class="k">버전</span><span class="v">${d.version}</span></div>
         <div class="field"><span class="k">Alias</span><span class="v">${d.alias}</span></div>
+        <div class="field"><span class="k">설명</span><span class="v">${d.description || '-'}</span></div>
       </div>
 
       <div class="section">
@@ -1161,7 +1180,6 @@ async function openDrawer(id) {
         <div class="field"><span class="k">관리 포트</span><span class="v mono">${d.mgmtPort}</span></div>
         <div class="field"><span class="k">관리자 ID</span><span class="v mono">${d.adminId}</span></div>
         ${secretField('비밀번호', d.password || '')}
-        <div class="field"><span class="k">인증 방식</span><span class="v">${(AUTH_METHODS[d.authMethod] || AUTH_METHODS.api_key).label}</span></div>
         ${(AUTH_METHODS[d.authMethod] || AUTH_METHODS.api_key).fields.map(f => {
           const val = (d.auth || {})[f.key] || '';
           return f.secret ? secretField(f.label, val) : `<div class="field"><span class="k">${f.label}</span><span class="v mono">${val || '-'}</span></div>`;
@@ -1412,6 +1430,7 @@ function openAddModal() {
         <label class="fld"><span>관리 포트</span><input id="f_port" type="number" value="443"></label>
         <label class="fld"><span>관리자 ID</span><input id="f_admin" value="admin" autocomplete="off"></label>
         <label class="fld"><span>비밀번호</span><input id="f_pw" type="text" placeholder="콘솔/SSH 비밀번호" autocomplete="off"></label>
+        <label class="fld full"><span>설명</span><input id="f_desc" placeholder="메모 (선택) — 예: 18층 서버실 · 담당자" autocomplete="off"></label>
       </div>
       ${authSection('api_key', {})}
       <div class="form-err" id="f_err"></div>
@@ -1437,6 +1456,7 @@ async function submitAddDevice() {
     mgmt_port: +$('#f_port').value || 443,
     version: $('#f_version').value.trim() || null,
     admin_id: $('#f_admin').value.trim() || null,
+    description: $('#f_desc').value.trim() || null,
     password: $('#f_pw').value || null,
     ...collectAuth(),
   };
@@ -1471,6 +1491,7 @@ async function openEditModal(id) {
         <label class="fld"><span>관리 포트</span><input id="f_port" type="number" value="${d.mgmtPort}"></label>
         <label class="fld"><span>관리자 ID</span><input id="f_admin" value="${escAttr(d.adminId === '-' ? '' : d.adminId)}" autocomplete="off"></label>
         <label class="fld"><span>비밀번호</span><input id="f_pw" type="text" value="${escAttr(d.password)}" autocomplete="off"></label>
+        <label class="fld full"><span>설명</span><input id="f_desc" value="${escAttr(d.description)}" placeholder="메모 (선택)" autocomplete="off"></label>
       </div>
       ${authSection(d.authMethod, d.auth)}
       <div class="form-err" id="f_err"></div>
@@ -1487,6 +1508,7 @@ async function submitEditDevice(id) {
     mgmt_port: +$('#f_port').value || 443,
     version: $('#f_version').value.trim() || null,
     admin_id: $('#f_admin').value.trim() || null,
+    description: $('#f_desc').value.trim() || null,
     password: $('#f_pw').value || null,
     ...collectAuth(),
   };
