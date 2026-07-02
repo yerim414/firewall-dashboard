@@ -2,12 +2,17 @@
 from __future__ import annotations   # str | None 문법을 구버전 파이썬에서도 허용
 
 import json
+import os
+import shutil
 import sqlite3
+import uuid
 from datetime import datetime, date
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Form, File, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+
+DOCS_DIR = os.environ.get("FW_DOCS_DIR", "docs")   # 업로드 PDF 저장 폴더
 
 import db
 import crypto
@@ -389,6 +394,81 @@ def delete_registration(sid: str, ip: str):
         conn.execute(
             "DELETE FROM server_registrations WHERE server_id = ? AND ip = ?", (sid, ip)
         )
+
+
+# ── 벤더별 API 문서 (수동 관리) ─────────────────────────
+@app.get("/api/vendor-docs")
+def list_vendor_docs():
+    with db.session() as conn:
+        rows = conn.execute(
+            "SELECT id, vendor, kind, title, url, file_name, file_orig, guide, memo FROM vendor_docs ORDER BY vendor, sort, id"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+@app.post("/api/vendor-docs", status_code=201)
+async def create_vendor_doc(
+    vendor: str = Form(...),
+    kind: str = Form(...),
+    title: str = Form(...),
+    url: str | None = Form(None),
+    guide: str | None = Form(None),
+    memo: str | None = Form(None),
+    file: UploadFile | None = File(None),
+):
+    if kind not in ("web", "pdf", "gui", "related"):
+        raise HTTPException(400, "잘못된 문서 종류")
+    file_name = file_orig = None
+    if kind == "pdf":
+        if not file:
+            raise HTTPException(400, "PDF 파일이 필요합니다")
+        ext = os.path.splitext(file.filename or "")[1] or ".pdf"
+        file_name = uuid.uuid4().hex + ext
+        file_orig = file.filename
+        os.makedirs(DOCS_DIR, exist_ok=True)
+        with open(os.path.join(DOCS_DIR, file_name), "wb") as f:
+            shutil.copyfileobj(file.file, f)
+    with db.session() as conn:
+        conn.execute(
+            "INSERT INTO vendor_docs(vendor, kind, title, url, file_name, file_orig, guide, memo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (vendor, kind, title, url, file_name, file_orig, guide, memo),
+        )
+    return {"ok": True}
+
+
+class DocOrder(BaseModel):
+    ids: list[int]      # 새 순서대로의 문서 id 목록
+
+
+@app.patch("/api/vendor-docs/reorder")
+def reorder_vendor_docs(body: DocOrder):
+    with db.session() as conn:
+        for i, doc_id in enumerate(body.ids):
+            conn.execute("UPDATE vendor_docs SET sort = ? WHERE id = ?", (i, doc_id))
+    return {"ok": True}
+
+
+@app.delete("/api/vendor-docs/{doc_id}", status_code=204)
+def delete_vendor_doc(doc_id: int):
+    with db.session() as conn:
+        row = conn.execute("SELECT file_name FROM vendor_docs WHERE id = ?", (doc_id,)).fetchone()
+        conn.execute("DELETE FROM vendor_docs WHERE id = ?", (doc_id,))
+    if row and row["file_name"]:
+        try:
+            os.remove(os.path.join(DOCS_DIR, row["file_name"]))
+        except OSError:
+            pass
+
+
+@app.get("/api/docs/files/{name}")
+def download_doc_file(name: str):
+    safe = os.path.basename(name)                    # 경로 탈출 방지
+    path = os.path.join(DOCS_DIR, safe)
+    if not os.path.exists(path):
+        raise HTTPException(404, "파일을 찾을 수 없습니다")
+    with db.session() as conn:
+        row = conn.execute("SELECT file_orig FROM vendor_docs WHERE file_name = ?", (safe,)).fetchone()
+    return FileResponse(path, filename=(row["file_orig"] if row and row["file_orig"] else safe))
 
 
 # ── 프론트엔드 ─────────────────────────────────────────

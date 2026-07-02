@@ -39,6 +39,9 @@ _SECRET_COLS = {
 _FIREWALL_COLS = {
     "description": "TEXT",
 }
+_VENDOR_DOCS_COLS = {
+    "memo": "TEXT",
+}
 
 
 def _add_missing(conn, table, cols):
@@ -57,3 +60,4 @@ def init_db():
         _add_missing(conn, "servers", _SERVER_COLS)
         _add_missing(conn, "firewall_secrets", _SECRET_COLS)
         _add_missing(conn, "firewalls", _FIREWALL_COLS)
+        _add_missing(conn, "vendor_docs", _VENDOR_DOCS_COLS)

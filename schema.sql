@@ -74,3 +74,20 @@ CREATE TABLE IF NOT EXISTS app_settings (
   key   TEXT PRIMARY KEY,
   value BLOB
 );
+
+-- 7. 벤더별 API 문서 (수동 관리, 장비와 무관)
+--    kind: web(웹 공개 링크) | pdf(우리 폴더 파일) | gui(GUI 확인 안내) | related(관련 문서 링크)
+CREATE TABLE IF NOT EXISTS vendor_docs (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  vendor     TEXT NOT NULL,
+  kind       TEXT NOT NULL,
+  title      TEXT NOT NULL,
+  url        TEXT,          -- web / related
+  file_name  TEXT,          -- pdf: docs/ 폴더의 저장 파일명
+  file_orig  TEXT,          -- pdf: 원본 파일명(표시·다운로드용)
+  guide      TEXT,          -- gui: 확인 방법 안내
+  memo       TEXT,          -- 자유 메모 (로그인 계정 안내 등)
+  sort       INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_vendor_docs ON vendor_docs(vendor);

@@ -167,7 +167,7 @@
   .row-2col { display: flex; gap: 18px; align-items: flex-start; }
   .tree { width: 230px; flex-shrink: 0; padding: 10px; position: sticky; top: 20px; }
   .col { flex: 1; min-width: 0; }
-  .tree .titlebar { font-size: 11px; color: var(--muted); padding: 8px 10px 6px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .tree .titlebar, .doc-vlist .titlebar { font-size: 11px; color: var(--muted); padding: 8px 10px 6px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
   .tnode { display: flex; align-items: center; gap: 4px; padding: 9px 10px; border-radius: 9px; cursor: pointer; font-size: 14px; }
   .tnode:hover { background: var(--hover); }
   .tnode.active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
@@ -259,6 +259,47 @@
   .doc-pill.pub  { background: var(--ok-soft);   color: var(--ok); }
   .doc-pill.int  { background: var(--warn-soft); color: var(--warn); }
   .doc-pill.none { background: var(--chip);      color: var(--muted); }
+
+  /* API 문서 카드 */
+  .doc-badges { display: inline-flex; gap: 4px; margin-left: 4px; vertical-align: middle; }
+  .doc-kind-badge { font-size: 10px; font-weight: 700; letter-spacing: .03em; background: var(--primary-soft); color: var(--primary); border-radius: 5px; padding: 1px 5px; }
+  .doc-detail-body { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; align-items: start; }
+  .doc-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; transition: border-color .12s, box-shadow .12s; }
+  .doc-card:hover { border-color: #d4dbe6; box-shadow: var(--shadow); }
+  .doc-card-top { display: flex; align-items: center; justify-content: space-between; min-height: 22px; margin-bottom: 8px; }
+  .doc-top-right { display: inline-flex; align-items: center; gap: 4px; }
+  .doc-grip { color: var(--muted); cursor: grab; font-size: 13px; line-height: 1; user-select: none; }
+  body.admin .doc-card { cursor: grab; }
+  .doc-card.dragging { opacity: .45; }
+  .doc-card-title { font-weight: 700; font-size: 15px; word-break: break-all; }
+  .doc-file { color: var(--muted); font-family: 'Consolas', monospace; font-size: 12px; margin-top: 5px; }
+  .doc-card-foot { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .doc-foot-btn { display: inline-block; color: var(--primary); font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; background: none; border: none; padding: 0; font-family: inherit; }
+  .doc-foot-btn:hover { text-decoration: underline; }
+  .doc-foot-btn.off { color: var(--muted); cursor: default; }
+  .doc-foot-btn.off:hover { text-decoration: none; }
+  .doc-chip { font-size: 10px; font-weight: 800; letter-spacing: .04em; border-radius: 5px; padding: 2.5px 7px; flex-shrink: 0; }
+  .doc-chip.web     { background: var(--ok-soft);      color: var(--ok); }
+  .doc-chip.pdf     { background: var(--primary-soft); color: var(--primary); }
+  .doc-chip.gui     { background: var(--warn-soft);    color: var(--warn); }
+  .doc-chip.related { background: var(--chip);         color: var(--muted); }
+  .doc-guide { white-space: pre-wrap; background: var(--chip); color: var(--text); border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 13px; line-height: 1.6; }
+  .doc-memo { white-space: pre-wrap; color: var(--muted); font-size: 12.5px; line-height: 1.6; margin-top: 10px; border-left: 2px solid var(--line); padding-left: 10px; }
+
+  /* API 문서 — 좌측 벤더 + 우측 상세 */
+  .doc-layout { display: flex; gap: 18px; align-items: flex-start; }
+  .doc-vlist { width: 210px; flex-shrink: 0; padding: 10px; position: sticky; top: 20px; }
+  .doc-vitem { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-radius: 9px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text); }
+  .doc-vitem:hover { background: var(--hover); }
+  .doc-vitem.active { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+  .dv-cnt { font-size: 12px; font-weight: 700; color: var(--muted); background: var(--chip); border-radius: 10px; padding: 1px 8px; min-width: 22px; text-align: center; }
+  .doc-vitem.active .dv-cnt { background: var(--card); color: var(--primary); }
+  .dv-cnt.zero { background: none; color: var(--line); }
+  .doc-detail { flex: 1; min-width: 0; padding: 18px 20px; }
+  .doc-detail-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+  .doc-detail-cnt { color: var(--muted); font-size: 13px; margin-left: 4px; }
+  @media (max-width: 1200px) { .doc-detail-body { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .doc-layout { flex-direction: column; } .doc-vlist { width: auto; position: static; } }
 
   /* 등록 서버 칩 (테이블) */
   .srvcell { line-height: 1.9; }
@@ -377,11 +418,12 @@
   .fld { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
   .fld.full { grid-column: 1 / -1; }
   .fld > span { color: var(--muted); font-weight: 600; }
-  .fld input, .fld select {
+  .fld input, .fld select, .fld textarea {
     padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
     background: var(--bg); color: var(--text); font-size: 14px; outline: none; font-family: inherit;
   }
-  .fld input:focus, .fld select:focus { border-color: var(--primary); background: var(--card); }
+  .fld textarea { resize: vertical; }
+  .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: var(--primary); background: var(--card); }
 
   /* ── 관리자 모드 ── */
   .brand .logo { cursor: default; user-select: none; }   /* 클릭 가능 티 안 나게 (이스터에그) */
@@ -528,30 +570,12 @@
       <div id="serverList"></div>
     </section>
 
-    <!-- API 문서 -->
+    <!-- API 문서 (좌측 벤더 + 우측 문서) -->
     <section class="view" data-view="docs" hidden>
-      <div class="card toolbar">
-        <div class="search">
-          <span class="ic">🔍</span>
-          <input id="docQ" type="text" placeholder="벤더 · 버전 검색…" autocomplete="off">
-        </div>
+      <div class="doc-layout">
+        <aside class="card doc-vlist" id="docVendorList"></aside>
+        <div class="card doc-detail" id="docDetail"></div>
       </div>
-      <div class="card tablebox">
-        <table>
-          <thead>
-            <tr>
-              <th>Vendor</th>
-              <th>문서 버전</th>
-              <th>제공 형태</th>
-              <th>적용 장비</th>
-              <th>문서</th>
-            </tr>
-          </thead>
-          <tbody id="docRows"></tbody>
-        </table>
-        <div class="empty" id="docEmpty" style="display:none">표시할 문서가 없습니다.</div>
-      </div>
-      <div class="pager"><div class="info" id="docInfoBar"></div></div>
     </section>
 
     <!-- 통계 -->
@@ -1099,7 +1123,7 @@ function filterStatus(s) {
 }
 
 /* ── 통계 ── */
-function renderStats() {
+async function renderStats() {
   const total = DATA.length;
   const { up, warn, down } = statusCounts();
   const upDeg = up / total * 360;
@@ -1121,18 +1145,17 @@ function renderStats() {
       <span class="bar-val">${c}</span>
     </div>`).join('');
 
-  const docs = buildDocs();
-  const pub = docs.filter(g => g.avail === 'pub').length;
-  const intn = docs.filter(g => g.avail === 'int').length;
-  const none = docs.filter(g => g.avail === 'none').length;
-  const dmax = Math.max(pub, intn, none, 1);
-  const drows = [['공개 문서', pub, 'var(--ok)'], ['사내 보관', intn, 'var(--warn)'], ['미제공', none, 'var(--muted)']];
-  $('#docStats').innerHTML = drows.map(([n, c, col]) => `
+  let vdocs = [];
+  try { vdocs = await api('/vendor-docs'); } catch (e) {}
+  const kinds = [['web', '웹 공개', 'var(--ok)'], ['pdf', 'PDF', 'var(--primary)'], ['gui', 'GUI', 'var(--warn)'], ['related', '관련 문서', 'var(--muted)']];
+  const kc = k => vdocs.filter(d => d.kind === k).length;
+  const dmax = Math.max(...kinds.map(([k]) => kc(k)), 1);
+  $('#docStats').innerHTML = kinds.map(([k, label, col]) => `
     <div class="bar-row">
-      <span class="bar-label">${n}</span>
-      <span class="bar-track"><i style="width:${c / dmax * 100}%;background:${col}"></i></span>
-      <span class="bar-val">${c}</span>
-    </div>`).join('') + `<div class="kpi-sub" style="margin-top:10px">총 ${docs.length}종 문서</div>`;
+      <span class="bar-label">${label}</span>
+      <span class="bar-track"><i style="width:${kc(k) / dmax * 100}%;background:${col}"></i></span>
+      <span class="bar-val">${kc(k)}</span>
+    </div>`).join('') + `<div class="kpi-sub" style="margin-top:10px">총 ${vdocs.length}건 · 문서 있는 벤더 ${new Set(vdocs.map(d => d.vendor)).size}개</div>`;
 }
 
 /* ── 상세 패널 ── */
@@ -1244,83 +1267,193 @@ function copyVal(btn, val) {
   setTimeout(() => btn.textContent = old, 900);
 }
 
-/* ── API 문서 ── */
-function docInfo(d) {
-  const m = d.version.match(/(\d+)\.(\d+)/);
-  const mm = m ? `${m[1]}.${m[2]}` : d.version;
-  const docUrlMap = {
-    Fortinet:   `https://docs.fortinet.com/product/fortigate/${mm}`,
-    Paloalto:   `https://docs.paloaltonetworks.com/pan-os/${mm.replace('.', '-')}/pan-os-panorama-api`,
-    CheckPoint: `https://sc1.checkpoint.com/documents/latest/APIs/`,
-  };
-  const url = docUrlMap[d.vendor] || null;
-  const fileName = `${d.vendor}_REST_API_v${mm}.pdf`;
-  const avail = url ? 'pub' : (mm === '-' || !m ? 'none' : 'int');
-  return { docVersion: mm, url, fileName, avail };
-}
-const AVAIL_LABEL = { pub: '공개 문서', int: '사내 보관', none: '미제공' };
+/* ── API 문서 (벤더별 수동 관리, 카드 아코디언) ── */
+const DOC_KIND = {
+  web:     { label: '웹 공개',    icon: '🔗', badge: 'WEB' },
+  pdf:     { label: 'PDF',        icon: '📄', badge: 'PDF' },
+  gui:     { label: '방화벽 GUI', icon: '🖥', badge: 'GUI' },
+  related: { label: '관련 문서',  icon: '🔗', badge: '관련' },
+};
+const SVG_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+let docsCache = [];
+let docVendor = null;   // 선택된 벤더
 
-function buildDocs() {
-  const map = new Map();
-  DATA.forEach(d => {
-    const doc = docInfo(d);
-    const key = `${d.vendor}|${doc.docVersion}`;
-    if (!map.has(key)) map.set(key, { vendor: d.vendor, docVersion: doc.docVersion, url: doc.url, fileName: doc.fileName, avail: doc.avail, devices: [] });
-    map.get(key).devices.push(d);
+async function renderDocs() {
+  try { docsCache = await api('/vendor-docs'); }
+  catch (e) { $('#docDetail').innerHTML = `<div class="empty">문서 정보를 불러오지 못했습니다: ${e.message}</div>`; return; }
+  const byVendor = {};
+  docsCache.forEach(d => { (byVendor[d.vendor] = byVendor[d.vendor] || []).push(d); });
+  // 관리자: 전체 벤더 / 일반: 문서 1건 이상인 벤더만
+  const vendorList = adminMode ? VENDOR_OPTIONS : VENDOR_OPTIONS.filter(v => (byVendor[v] || []).length);
+  if (!docVendor || !vendorList.includes(docVendor)) {
+    docVendor = vendorList.find(v => (byVendor[v] || []).length) || vendorList[0] || null;
+  }
+
+  // 좌측: 벤더 목록 (장비 목록 트리와 동일 스타일)
+  $('#docVendorList').innerHTML = `<div class="titlebar">벤더</div>` + (vendorList.length ? vendorList.map(v => {
+    const n = (byVendor[v] || []).length;
+    return `<div class="tnode ${v === docVendor ? 'active' : ''}" onclick="selectDocVendor('${v}')">
+      <span class="nm">${v}</span>
+      <span class="cnt">${n}</span>
+    </div>`;
+  }).join('') : `<div class="srv-empty" style="padding:10px">등록된 문서가 없습니다.</div>`);
+
+  // 우측: 선택 벤더 문서
+  if (!docVendor) {
+    $('#docDetail').innerHTML = `<div class="empty">등록된 API 문서가 없습니다.${adminMode ? '' : '<br>(관리자 모드에서 문서를 추가할 수 있습니다)'}</div>`;
+    return;
+  }
+  const items = byVendor[docVendor] || [];
+  const addBtn = adminMode ? `<button class="ghost sm" onclick="openDocModal('${docVendor}')">+ 문서 추가</button>` : '';
+  const body = items.length ? items.map(docRow).join('')
+    : `<div class="empty">등록된 문서가 없습니다.${adminMode ? '<br>우측 상단 “+ 문서 추가”로 등록하세요.' : ''}</div>`;
+  $('#docDetail').innerHTML = `
+    <div class="doc-detail-head">
+      <div>${vendorBadge(docVendor)} <span class="doc-detail-cnt">${items.length}건</span></div>
+      ${addBtn}
+    </div>
+    <div class="doc-detail-body">${body}</div>`;
+  if (adminMode) setupDocDnd();
+}
+function selectDocVendor(v) { docVendor = v; renderDocs(); }
+
+/* ── 문서 카드 드래그 정렬 (관리자) ── */
+let docDragEl = null;
+function setupDocDnd() {
+  const container = $('#docDetail').querySelector('.doc-detail-body');
+  if (!container) return;
+  container.querySelectorAll('.doc-card').forEach(card => {
+    card.addEventListener('dragstart', e => {
+      docDragEl = card; card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', card.dataset.docid); } catch (x) {}
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      if (docDragEl) saveDocOrder(container);
+      docDragEl = null;
+    });
   });
-  return [...map.values()];
+  container.addEventListener('dragover', e => {
+    if (!docDragEl) return;
+    e.preventDefault();
+    const ref = docDragAfter(container, e.clientX, e.clientY);
+    if (ref !== docDragEl) container.insertBefore(docDragEl, ref);
+  });
 }
-function getFilteredDocs() {
-  const q = $('#docQ').value.trim().toLowerCase();
-  let docs = buildDocs();
-  if (selectedVendor) docs = docs.filter(g => g.vendor === selectedVendor);
-  if (q) docs = docs.filter(g => `${g.vendor} ${g.docVersion} ${g.fileName}`.toLowerCase().includes(q));
-  docs.sort((a, b) => a.vendor.localeCompare(b.vendor) || a.docVersion.localeCompare(b.docVersion, undefined, { numeric: true }));
-  return docs;
+function docDragAfter(container, x, y) {
+  const cards = [...container.querySelectorAll('.doc-card:not(.dragging)')];
+  let best = null, bestDist = Infinity;
+  for (const el of cards) {
+    const b = el.getBoundingClientRect();
+    const d = Math.hypot(x - (b.left + b.width / 2), y - (b.top + b.height / 2));
+    if (d < bestDist) { bestDist = d; best = el; }
+  }
+  if (!best) return null;
+  const b = best.getBoundingClientRect();
+  const before = (y < b.top + b.height / 2 - 4) || (Math.abs(y - (b.top + b.height / 2)) <= b.height / 2 && x < b.left + b.width / 2);
+  return before ? best : best.nextElementSibling;
 }
-function renderDocs() {
-  const docs = getFilteredDocs();
-  $('#docRows').innerHTML = docs.map(g => {
-    const devTitle = g.devices.map(d => `${d.alias} (${d.ip})`).join(', ');
-    let action;
-    if (g.avail === 'pub') {
-      action = `<a class="ghost sm" href="${g.url}" target="_blank" rel="noopener">열기 ↗</a>`
-             + `<button class="ghost sm" onclick="downloadDocGroup('${g.vendor}','${g.docVersion}')">다운로드 ⬇</button>`;
-    } else if (g.avail === 'int') {
-      action = `<button class="ghost sm" onclick="downloadDocGroup('${g.vendor}','${g.docVersion}')">다운로드 ⬇</button>`;
-    } else {
-      action = `<button class="ghost sm" disabled title="이 벤더는 API 문서를 제공하지 않습니다">문서 없음</button>`;
-    }
-    return `
-      <tr>
-        <td>${vendorBadge(g.vendor)}</td>
-        <td class="ver">${g.docVersion}</td>
-        <td><span class="doc-pill ${g.avail}">${AVAIL_LABEL[g.avail]}</span></td>
-        <td class="devcnt" title="${devTitle}">${g.devices.length}대</td>
-        <td class="docact">${action}</td>
-      </tr>`;
-  }).join('');
-  $('#docEmpty').style.display = docs.length ? 'none' : 'block';
-  const pub = docs.filter(g => g.avail === 'pub').length;
-  const intn = docs.filter(g => g.avail === 'int').length;
-  const none = docs.filter(g => g.avail === 'none').length;
-  $('#docInfoBar').textContent = docs.length
-    ? `문서 ${docs.length}종 · 공개 ${pub} / 사내 ${intn} / 미제공 ${none}`
-    : '0종';
+function saveDocOrder(container) {
+  const ids = [...container.querySelectorAll('.doc-card')].map(c => +c.dataset.docid);
+  api('/vendor-docs/reorder', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
+    .then(() => toast('순서 저장됨'))
+    .catch(e => { alert('순서 저장 실패: ' + e.message); renderDocs(); });
 }
-function downloadDocGroup(vendor, docVersion) {
-  const g = buildDocs().find(x => x.vendor === vendor && x.docVersion === docVersion);
-  if (!g) return;
-  const body =
-`[목업] ${g.vendor} REST API 문서
-문서 버전: ${g.vendor} ${g.docVersion}
-제공 형태: ${AVAIL_LABEL[g.avail]}
-공개 문서 URL: ${g.url || '없음 (사내 보관본)'}
-적용 장비 (${g.devices.length}대): ${g.devices.map(d => `${d.alias}(${d.ip})`).join(', ')}
-
-실제 구현에서는 이 자리에서 사내 파일서버/오브젝트스토리지에 저장된
-${g.fileName} 을 내려받게 됩니다.`;
-  saveText(g.fileName.replace(/\.pdf$/, '.txt'), body);
+function docRow(d) {
+  const k = DOC_KIND[d.kind] || {};
+  let action = '';
+  if (d.kind === 'web' || d.kind === 'related') {
+    action = d.url ? `<a class="doc-foot-btn" draggable="false" href="${escAttr(d.url)}" target="_blank" rel="noopener">열기 ↗</a>` : `<span class="doc-foot-btn off">링크 없음</span>`;
+  } else if (d.kind === 'pdf') {
+    action = d.file_name ? `<a class="doc-foot-btn" draggable="false" href="/api/docs/files/${encodeURIComponent(d.file_name)}">다운로드 ⬇</a>` : `<span class="doc-foot-btn off">파일 없음</span>`;
+  } else if (d.kind === 'gui') {
+    action = `<button class="doc-foot-btn" onclick="toggleGuide(${d.id})">확인 방법 보기 ▾</button>`;
+  }
+  const del = adminMode ? `<button class="adm-x danger" title="삭제" onclick="deleteDoc(${d.id})">×</button>` : '';
+  const guide = d.kind === 'gui' ? `<div class="doc-guide" id="guide-${d.id}" hidden>${escAttr(d.guide || '')}</div>` : '';
+  const memo = d.memo ? `<div class="doc-memo">${escAttr(d.memo)}</div>` : '';
+  const sub = (d.kind === 'pdf' && d.file_orig) ? `<div class="doc-file">${escAttr(d.file_orig)}</div>` : '';
+  return `
+    <div class="doc-card" data-docid="${d.id}" ${adminMode ? 'draggable="true"' : ''}>
+      <div class="doc-card-top">
+        <span class="doc-chip ${d.kind}">${k.badge || '문서'}</span>
+        <span class="doc-top-right">${adminMode ? '<span class="doc-grip" title="드래그로 순서 변경">⠿</span>' : ''}${del}</span>
+      </div>
+      <div class="doc-card-title">${escAttr(d.title)}</div>
+      ${sub}${memo}${guide}
+      <div class="doc-card-foot">${action}</div>
+    </div>`;
+}
+function toggleGuide(id) { const el = document.getElementById('guide-' + id); if (el) el.hidden = !el.hidden; }
+function deleteDoc(id) {
+  if (!confirm('이 문서를 삭제할까요?')) return;
+  api('/vendor-docs/' + id, { method: 'DELETE' })
+    .then(() => { toast('문서 삭제됨'); renderDocs(); })
+    .catch(e => alert('삭제 실패: ' + e.message));
+}
+function openDocModal(vendor) {
+  $('#srvModal').innerHTML = `
+    <div class="modal-head"><h2>문서 추가 · ${vendorBadge(vendor)}</h2><button class="close" onclick="closeServerModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <label class="fld"><span>종류</span>
+          <select id="doc_kind" onchange="onDocKindChange()">
+            <option value="web">웹 공개 (링크)</option>
+            <option value="pdf">PDF (파일 업로드)</option>
+            <option value="gui">방화벽 GUI (확인 안내)</option>
+            <option value="related">관련 문서 (링크)</option>
+          </select></label>
+        <label class="fld"><span>제목 *</span><input id="doc_title" placeholder="예: FortiOS 7.4 API" autocomplete="off"></label>
+      </div>
+      <div id="doc_kind_fields"></div>
+      <div class="form-grid" style="margin-top:14px">
+        <label class="fld full"><span>메모 <span style="font-weight:400;color:var(--muted)">(선택 · 로그인 계정·비밀번호 안내 등)</span></span>
+          <textarea id="doc_memo" rows="3" placeholder="예: 사번으로 로그인 / PDF 비밀번호 1234"></textarea></label>
+      </div>
+      <input type="hidden" id="doc_vendor" value="${escAttr(vendor)}">
+      <div class="form-err" id="doc_err"></div>
+    </div>
+    <div class="modal-foot"><button class="ghost" onclick="closeServerModal()">취소</button><button class="btn" onclick="submitDoc()">추가</button></div>`;
+  onDocKindChange();
+  $('#srvModalOverlay').classList.add('on');
+  setTimeout(() => $('#doc_title').focus(), 50);
+}
+function onDocKindChange() {
+  const k = $('#doc_kind').value;
+  let inner = '';
+  if (k === 'web' || k === 'related') inner = `<label class="fld full"><span>URL *</span><input id="doc_url" placeholder="https://..." autocomplete="off"></label>`;
+  else if (k === 'pdf') inner = `<label class="fld full"><span>PDF 파일 *</span><input id="doc_file" type="file" accept="application/pdf,.pdf"></label>`;
+  else if (k === 'gui') inner = `<label class="fld full"><span>확인 방법 안내 *</span><textarea id="doc_guide" rows="4" placeholder="예: 시스템 > 관리 > API 메뉴에서 토큰 확인…"></textarea></label>`;
+  $('#doc_kind_fields').innerHTML = `<div class="form-grid" style="margin-top:14px">${inner}</div>`;
+}
+async function submitDoc() {
+  const vendor = $('#doc_vendor').value;
+  const kind = $('#doc_kind').value;
+  const title = $('#doc_title').value.trim();
+  if (!title) { $('#doc_err').textContent = '제목은 필수입니다.'; return; }
+  const fd = new FormData();
+  fd.append('vendor', vendor); fd.append('kind', kind); fd.append('title', title);
+  const memo = $('#doc_memo').value.trim();
+  if (memo) fd.append('memo', memo);
+  if (kind === 'web' || kind === 'related') {
+    const url = $('#doc_url').value.trim();
+    if (!url) { $('#doc_err').textContent = 'URL은 필수입니다.'; return; }
+    fd.append('url', url);
+  } else if (kind === 'pdf') {
+    const f = $('#doc_file').files[0];
+    if (!f) { $('#doc_err').textContent = 'PDF 파일을 선택하세요.'; return; }
+    fd.append('file', f);
+  } else if (kind === 'gui') {
+    const g = $('#doc_guide').value.trim();
+    if (!g) { $('#doc_err').textContent = '안내 내용을 입력하세요.'; return; }
+    fd.append('guide', g);
+  }
+  try {
+    const res = await fetch('/api/vendor-docs', { method: 'POST', body: fd });
+    if (!res.ok) { let m = res.status; try { m = (await res.json()).detail || m; } catch (e) {} throw new Error(m); }
+  } catch (e) { $('#doc_err').textContent = '추가 실패: ' + e.message; return; }
+  closeServerModal(); toast('문서 추가됨'); docVendor = vendor; renderDocs();
 }
 function saveText(filename, body) {
   const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
@@ -1564,7 +1697,6 @@ function toggleKpis() {
 $('#q').addEventListener('input', () => { page = 1; render(); });
 $('#status').addEventListener('change', () => { page = 1; render(); });
 $('#pageSize').addEventListener('change', (e) => { pageSize = +e.target.value; page = 1; render(); });
-$('#docQ').addEventListener('input', () => render());
 document.querySelectorAll('thead th').forEach(th => {
   if (!th.dataset.k) return;
   th.addEventListener('click', () => {

@@ -3,3 +3,4 @@ uvicorn[standard]
 cryptography
 pymysql            # MySQL / MariaDB 서버 DB 동기화
 psycopg2-binary    # PostgreSQL 서버 DB 동기화
+python-multipart   # API 문서 PDF 업로드(멀티파트)
