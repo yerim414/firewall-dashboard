@@ -308,7 +308,7 @@
   .srv-chip.none { background: var(--warn-soft); color: var(--warn); }
 
   /* 등록 서버 (드로어) */
-  .scode { font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-soft); border-radius: 5px; padding: 1px 6px; margin-left: 5px; }
+  .scode { font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-soft); border-radius: 5px; padding: 1px 6px; margin-left: 5px; white-space: nowrap; }
   .srv { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; }
   .srv .si { width: 34px; height: 34px; border-radius: 10px; background: var(--primary-soft); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
   .srv .smeta { min-width: 0; }
@@ -1311,7 +1311,7 @@ async function openDrawer(id) {
   let d;
   try { d = mapFw(await api('/firewalls/' + id)); }
   catch (e) { alert('상세를 불러오지 못했습니다: ' + e.message); return; }
-  const guiPort = d.guiPort || d.mgmtPort || 443;
+  const guiPort = d.guiPort || d.mgmtPort || '';    // 미설정이면 표준 https(443)
   const sshPort = d.sshPort || 22;
   const webUrl = `https://${d.ip}${guiPort && +guiPort !== 443 ? ':' + guiPort : ''}/`;
   const sshUrl = `ssh://${d.adminId === '-' ? '' : d.adminId + '@'}${d.ip}${+sshPort !== 22 ? ':' + sshPort : ''}`;
@@ -1339,7 +1339,7 @@ async function openDrawer(id) {
       <div class="section">
         <h3>접속 정보</h3>
         <div class="field"><span class="k">관리 IP</span><span class="v mono">${d.ip}</span></div>
-        <div class="field"><span class="k">GUI 포트</span><span class="v mono">${guiPort}</span></div>
+        <div class="field"><span class="k">GUI 포트</span><span class="v mono">${guiPort || '443 (기본)'}</span></div>
         <div class="field"><span class="k">SSH 포트</span><span class="v mono">${sshPort}</span></div>
         <div class="field"><span class="k">API 포트</span><span class="v mono">${d.apiPort || '-'}</span></div>
         <div class="field"><span class="k">관리자 ID</span><span class="v mono">${d.adminId}</span></div>
@@ -1359,7 +1359,7 @@ async function openDrawer(id) {
               <span class="si">🗄</span>
               <div class="smeta">
                 <div class="sname">${s.name} <span class="scode">${s.short}</span></div>
-                <div class="srole">${s.role}</div>
+                ${s.role ? `<div class="srole">${s.role}</div>` : ''}
               </div>
               <span class="shost">${s.host}</span>
             </div>`).join('')
@@ -1790,7 +1790,7 @@ function openAddModal() {
         <label class="fld"><span>Alias *</span><input id="f_alias" placeholder="예: forti-test" autocomplete="off"></label>
         <label class="fld"><span>관리 IP *</span><input id="f_ip" placeholder="예: 192.168.0.1" autocomplete="off"></label>
         <label class="fld"><span>버전</span><input id="f_version" placeholder="예: 7.4.8" autocomplete="off"></label>
-        <label class="fld"><span>GUI 포트 <span style="font-weight:400;color:var(--muted)">(웹 콘솔)</span></span><input id="f_guiport" type="number" value="443" placeholder="443"></label>
+        <label class="fld"><span>GUI 포트 <span style="font-weight:400;color:var(--muted)">(웹 콘솔, 비우면 443)</span></span><input id="f_guiport" type="number" placeholder="443 (기본)"></label>
         <label class="fld"><span>SSH 포트</span><input id="f_sshport" type="number" value="22" placeholder="22"></label>
         <label class="fld"><span>API 포트 <span style="font-weight:400;color:var(--muted)">(선택)</span></span><input id="f_apiport" type="number" placeholder="예: 443"></label>
         <label class="fld"><span>관리자 ID</span><input id="f_admin" value="admin" autocomplete="off"></label>
@@ -1815,12 +1815,12 @@ async function submitAddDevice() {
   const ip = $('#f_ip').value.trim();
   if (!alias || !ip) { $('#f_err').textContent = 'Alias와 관리 IP는 필수 항목입니다.'; return; }
 
-  const guiPort = +$('#f_guiport').value || 443;
+  const guiPort = +$('#f_guiport').value || null;   // 비우면 표준 https(443)로 접속
   const body = {
     vendor: $('#f_vendor').value,
     alias, ip,
     gui_port: guiPort,
-    mgmt_port: guiPort,                              // legacy 컬럼도 GUI 포트와 동일하게 유지
+    mgmt_port: guiPort || 443,                       // legacy NOT NULL 컬럼 유지
     ssh_port: +$('#f_sshport').value || 22,
     api_port: +$('#f_apiport').value || null,
     version: $('#f_version').value.trim() || null,
@@ -1850,7 +1850,7 @@ async function openEditModal(id) {
   catch (e) { alert('불러오기 실패: ' + e.message); return; }
   const vopts = VENDOR_OPTIONS.map(v => `<option ${v === d.vendor ? 'selected' : ''}>${v}</option>`).join('');
   // legacy(idpw_ports/idpw_apiport) 레코드는 포트가 auth 안에 있음 → 표준 필드로 끌어와 저장 시 이관
-  const guiPort = d.guiPort || d.mgmtPort || 443;
+  const guiPort = d.guiPort || d.mgmtPort || '';   // 비우면 표준 https(443)
   const sshPort = d.sshPort || (d.auth && d.auth.ssh_port) || 22;
   const apiPort = d.apiPort || (d.auth && d.auth.api_port) || '';
   $('#addModal').innerHTML = `
@@ -1861,7 +1861,7 @@ async function openEditModal(id) {
         <label class="fld"><span>Alias *</span><input id="f_alias" value="${escAttr(d.alias)}" autocomplete="off"></label>
         <label class="fld"><span>관리 IP *</span><input id="f_ip" value="${escAttr(d.ip)}" autocomplete="off"></label>
         <label class="fld"><span>버전</span><input id="f_version" value="${escAttr(d.version === '-' ? '' : d.version)}" autocomplete="off"></label>
-        <label class="fld"><span>GUI 포트 <span style="font-weight:400;color:var(--muted)">(웹 콘솔)</span></span><input id="f_guiport" type="number" value="${escAttr(guiPort)}"></label>
+        <label class="fld"><span>GUI 포트 <span style="font-weight:400;color:var(--muted)">(웹 콘솔, 비우면 443)</span></span><input id="f_guiport" type="number" value="${escAttr(guiPort)}" placeholder="443 (기본)"></label>
         <label class="fld"><span>SSH 포트</span><input id="f_sshport" type="number" value="${escAttr(sshPort)}"></label>
         <label class="fld"><span>API 포트 <span style="font-weight:400;color:var(--muted)">(선택)</span></span><input id="f_apiport" type="number" value="${escAttr(apiPort)}"></label>
         <label class="fld"><span>관리자 ID</span><input id="f_admin" value="${escAttr(d.adminId === '-' ? '' : d.adminId)}" autocomplete="off"></label>
@@ -1878,11 +1878,11 @@ async function openEditModal(id) {
 async function submitEditDevice(id) {
   const alias = $('#f_alias').value.trim(), ip = $('#f_ip').value.trim();
   if (!alias || !ip) { $('#f_err').textContent = 'Alias와 관리 IP는 필수 항목입니다.'; return; }
-  const guiPort = +$('#f_guiport').value || 443;
+  const guiPort = +$('#f_guiport').value || null;
   const body = {
     vendor: $('#f_vendor').value, alias, ip,
     gui_port: guiPort,
-    mgmt_port: guiPort,
+    mgmt_port: guiPort || 443,
     ssh_port: +$('#f_sshport').value || 22,
     api_port: +$('#f_apiport').value || null,
     version: $('#f_version').value.trim() || null,
