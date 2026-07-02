@@ -383,14 +383,15 @@
   .eye, .copy { background: var(--chip); border: none; border-radius: 7px; width: 29px; height: 27px; cursor: pointer; color: var(--text); }
   .eye:hover, .copy:hover { background: var(--line); }
   .console-btns { display: flex; gap: 9px; margin-top: 4px; }
-  .console-btns a {
+  .console-btns a, .console-btns button {
     flex: 1; text-align: center; text-decoration: none; padding: 12px; border-radius: 11px;
-    font-weight: 600; font-size: 14px;
+    font-weight: 600; font-size: 14px; cursor: pointer; font-family: inherit;
   }
-  .console-btns a.web { background: var(--primary); color: #fff; }
-  .console-btns a.web:hover { background: var(--primary-2); }
-  .console-btns a.ssh { background: var(--card); color: var(--text); border: 1px solid var(--line); }
-  .console-btns a.ssh:hover { background: var(--hover); }
+  .console-btns .web { background: var(--primary); color: #fff; border: none; }
+  .console-btns .web:hover { background: var(--primary-2); }
+  .console-btns .ssh { background: var(--card); color: var(--text); border: 1px solid var(--line); }
+  .console-btns .ssh:hover { background: var(--hover); }
+  .ssh-cmd { margin-top: 8px; font-family: 'Consolas', monospace; font-size: 12.5px; color: var(--muted); background: var(--chip); border-radius: 8px; padding: 8px 10px; word-break: break-all; }
   .status-banner { display: flex; align-items: center; gap: 12px; padding: 15px 16px; border-radius: 11px; margin-top: 4px; font-size: 14px; }
   .status-banner.up   { background: var(--ok-soft);   color: var(--ok); }
   .status-banner.warn { background: var(--warn-soft); color: var(--warn); }
@@ -1314,7 +1315,7 @@ async function openDrawer(id) {
   const guiPort = d.guiPort || d.mgmtPort || '';    // 미설정이면 표준 https(443)
   const sshPort = d.sshPort || 22;
   const webUrl = `https://${d.ip}${guiPort && +guiPort !== 443 ? ':' + guiPort : ''}/`;
-  const sshUrl = `ssh://${d.adminId === '-' ? '' : d.adminId + '@'}${d.ip}${+sshPort !== 22 ? ':' + sshPort : ''}`;
+  const sshCmd = `ssh ${d.adminId === '-' ? '' : d.adminId + '@'}${d.ip}${+sshPort !== 22 ? ' -p ' + sshPort : ''}`;
   $('#drawer').innerHTML = `
     <div class="dh">
       <div class="top">
@@ -1371,8 +1372,9 @@ async function openDrawer(id) {
         <h3>콘솔 접속</h3>
         <div class="console-btns">
           <a class="web" href="${webUrl}" target="_blank" rel="noopener">웹 콘솔 ↗</a>
-          <a class="ssh" href="${sshUrl}">SSH 접속</a>
+          <button class="ssh" type="button" onclick="copySsh()">SSH 명령 복사 ⧉</button>
         </div>
+        <div class="ssh-cmd" id="sshCmd">${escAttr(sshCmd)}</div>
       </div>
 
       ${superMode ? `<div class="section" style="display:flex; gap:10px">
@@ -1406,6 +1408,12 @@ function copyVal(btn, val) {
   navigator.clipboard?.writeText(val);
   const old = btn.textContent; btn.textContent = '✓';
   setTimeout(() => btn.textContent = old, 900);
+}
+function copySsh() {
+  const el = document.getElementById('sshCmd');
+  if (!el) return;
+  navigator.clipboard?.writeText(el.textContent);
+  toast('SSH 명령 복사됨 — 터미널에 붙여넣기');
 }
 
 /* ── API 문서 (벤더별 수동 관리, 카드 아코디언) ── */
