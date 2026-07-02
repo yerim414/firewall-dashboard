@@ -273,11 +273,12 @@
   .doc-card.dragging { opacity: .45; }
   .doc-card-title { font-weight: 700; font-size: 15px; word-break: break-all; }
   .doc-file { color: var(--muted); font-family: 'Consolas', monospace; font-size: 12px; margin-top: 5px; }
-  .doc-card-foot { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .doc-card-foot { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 18px; }
   .doc-foot-btn { display: inline-block; color: var(--primary); font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; background: none; border: none; padding: 0; font-family: inherit; }
   .doc-foot-btn:hover { text-decoration: underline; }
   .doc-foot-btn.off { color: var(--muted); cursor: default; }
   .doc-foot-btn.off:hover { text-decoration: none; }
+  .doc-foot-btn.muted { color: var(--muted); font-weight: 500; }
   .doc-chip { font-size: 10px; font-weight: 800; letter-spacing: .04em; border-radius: 5px; padding: 2.5px 7px; flex-shrink: 0; }
   .doc-chip.web     { background: var(--ok-soft);      color: var(--ok); }
   .doc-chip.pdf     { background: var(--primary-soft); color: var(--primary); }
@@ -1270,7 +1271,7 @@ function copyVal(btn, val) {
 /* ── API 문서 (벤더별 수동 관리, 카드 아코디언) ── */
 const DOC_KIND = {
   web:     { label: '웹 공개',    icon: '🔗', badge: 'WEB' },
-  pdf:     { label: 'PDF',        icon: '📄', badge: 'PDF' },
+  pdf:     { label: '파일 첨부',  icon: '📎', badge: '파일' },
   gui:     { label: '방화벽 GUI', icon: '🖥', badge: 'GUI' },
   related: { label: '관련 문서',  icon: '🔗', badge: '관련' },
 };
@@ -1374,15 +1375,23 @@ function docRow(d) {
   const guide = d.kind === 'gui' ? `<div class="doc-guide" id="guide-${d.id}" hidden>${escAttr(d.guide || '')}</div>` : '';
   const memo = d.memo ? `<div class="doc-memo">${escAttr(d.memo)}</div>` : '';
   const sub = (d.kind === 'pdf' && d.file_orig) ? `<div class="doc-file">${escAttr(d.file_orig)}</div>` : '';
+  let chip = k.badge || '문서';
+  if (d.kind === 'pdf' && d.file_orig) {
+    const ext = d.file_orig.split('.').pop().toUpperCase();
+    if (ext && ext.length <= 4) chip = ext;      // 실제 확장자로 표시 (PDF/ZIP 등)
+  }
   return `
     <div class="doc-card" data-docid="${d.id}" ${adminMode ? 'draggable="true"' : ''}>
       <div class="doc-card-top">
-        <span class="doc-chip ${d.kind}">${k.badge || '문서'}</span>
+        <span class="doc-chip ${d.kind}">${chip}</span>
         <span class="doc-top-right">${adminMode ? '<span class="doc-grip" title="드래그로 순서 변경">⠿</span>' : ''}${del}</span>
       </div>
       <div class="doc-card-title">${escAttr(d.title)}</div>
       ${sub}${memo}${guide}
-      <div class="doc-card-foot">${action}</div>
+      <div class="doc-card-foot">
+        ${action}
+        ${adminMode ? `<button class="doc-foot-btn muted" onclick="openDocEditModal(${d.id})">수정</button>` : ''}
+      </div>
     </div>`;
 }
 function toggleGuide(id) { const el = document.getElementById('guide-' + id); if (el) el.hidden = !el.hidden; }
@@ -1400,7 +1409,7 @@ function openDocModal(vendor) {
         <label class="fld"><span>종류</span>
           <select id="doc_kind" onchange="onDocKindChange()">
             <option value="web">웹 공개 (링크)</option>
-            <option value="pdf">PDF (파일 업로드)</option>
+            <option value="pdf">파일 첨부 (PDF·ZIP 등)</option>
             <option value="gui">방화벽 GUI (확인 안내)</option>
             <option value="related">관련 문서 (링크)</option>
           </select></label>
@@ -1423,9 +1432,59 @@ function onDocKindChange() {
   const k = $('#doc_kind').value;
   let inner = '';
   if (k === 'web' || k === 'related') inner = `<label class="fld full"><span>URL *</span><input id="doc_url" placeholder="https://..." autocomplete="off"></label>`;
-  else if (k === 'pdf') inner = `<label class="fld full"><span>PDF 파일 *</span><input id="doc_file" type="file" accept="application/pdf,.pdf"></label>`;
+  else if (k === 'pdf') inner = `<label class="fld full"><span>파일 * <span style="font-weight:400;color:var(--muted)">(PDF·ZIP 등)</span></span><input id="doc_file" type="file"></label>`;
   else if (k === 'gui') inner = `<label class="fld full"><span>확인 방법 안내 *</span><textarea id="doc_guide" rows="4" placeholder="예: 시스템 > 관리 > API 메뉴에서 토큰 확인…"></textarea></label>`;
   $('#doc_kind_fields').innerHTML = `<div class="form-grid" style="margin-top:14px">${inner}</div>`;
+}
+function openDocEditModal(id) {
+  const d = docsCache.find(x => x.id === id);
+  if (!d) return;
+  const k = DOC_KIND[d.kind] || {};
+  let kindFields = '';
+  if (d.kind === 'web' || d.kind === 'related') kindFields = `<label class="fld full"><span>URL *</span><input id="doc_url" value="${escAttr(d.url || '')}" autocomplete="off"></label>`;
+  else if (d.kind === 'pdf') kindFields = `<label class="fld full"><span>파일 <span style="font-weight:400;color:var(--muted)">(현재: ${escAttr(d.file_orig || '-')} · 바꿀 때만 선택)</span></span><input id="doc_file" type="file"></label>`;
+  else if (d.kind === 'gui') kindFields = `<label class="fld full"><span>확인 방법 안내 *</span><textarea id="doc_guide" rows="4">${escAttr(d.guide || '')}</textarea></label>`;
+  $('#srvModal').innerHTML = `
+    <div class="modal-head"><h2>문서 수정 <span class="doc-chip ${d.kind}">${k.badge || '문서'}</span></h2><button class="close" onclick="closeServerModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid"><label class="fld full"><span>제목 *</span><input id="doc_title" value="${escAttr(d.title)}" autocomplete="off"></label></div>
+      <div class="form-grid" style="margin-top:14px">${kindFields}</div>
+      <div class="form-grid" style="margin-top:14px">
+        <label class="fld full"><span>메모 <span style="font-weight:400;color:var(--muted)">(선택)</span></span>
+          <textarea id="doc_memo" rows="3">${escAttr(d.memo || '')}</textarea></label>
+      </div>
+      <input type="hidden" id="doc_id" value="${d.id}">
+      <input type="hidden" id="doc_kind" value="${d.kind}">
+      <div class="form-err" id="doc_err"></div>
+    </div>
+    <div class="modal-foot"><button class="ghost" onclick="closeServerModal()">취소</button><button class="btn" onclick="submitDocEdit()">저장</button></div>`;
+  $('#srvModalOverlay').classList.add('on');
+  setTimeout(() => $('#doc_title').focus(), 50);
+}
+async function submitDocEdit() {
+  const id = $('#doc_id').value, kind = $('#doc_kind').value;
+  const title = $('#doc_title').value.trim();
+  if (!title) { $('#doc_err').textContent = '제목은 필수입니다.'; return; }
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('memo', $('#doc_memo').value.trim());
+  if (kind === 'web' || kind === 'related') {
+    const url = $('#doc_url').value.trim();
+    if (!url) { $('#doc_err').textContent = 'URL은 필수입니다.'; return; }
+    fd.append('url', url);
+  } else if (kind === 'gui') {
+    const g = $('#doc_guide').value.trim();
+    if (!g) { $('#doc_err').textContent = '안내 내용을 입력하세요.'; return; }
+    fd.append('guide', g);
+  } else if (kind === 'pdf') {
+    const f = $('#doc_file').files[0];
+    if (f) fd.append('file', f);          // 선택했을 때만 파일 교체
+  }
+  try {
+    const res = await fetch('/api/vendor-docs/' + id, { method: 'PATCH', body: fd });
+    if (!res.ok) { let m = res.status; try { m = (await res.json()).detail || m; } catch (e) {} throw new Error(m); }
+  } catch (e) { $('#doc_err').textContent = '저장 실패: ' + e.message; return; }
+  closeServerModal(); toast('문서 수정됨'); renderDocs();
 }
 async function submitDoc() {
   const vendor = $('#doc_vendor').value;

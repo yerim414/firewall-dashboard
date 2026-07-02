@@ -436,6 +436,42 @@ async def create_vendor_doc(
     return {"ok": True}
 
 
+@app.patch("/api/vendor-docs/{doc_id}")
+async def update_vendor_doc(
+    doc_id: int,
+    title: str | None = Form(None),
+    url: str | None = Form(None),
+    guide: str | None = Form(None),
+    memo: str | None = Form(None),
+    file: UploadFile | None = File(None),
+):
+    with db.session() as conn:
+        row = conn.execute("SELECT file_name FROM vendor_docs WHERE id = ?", (doc_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "문서를 찾을 수 없습니다")
+        sets, vals = [], []
+        for col, val in (("title", title), ("url", url), ("guide", guide), ("memo", memo)):
+            if val is not None:                     # 전송된 필드만 갱신 (빈 문자열도 반영)
+                sets.append(f"{col} = ?"); vals.append(val)
+        if file is not None:                        # 새 파일 업로드 시 교체
+            ext = os.path.splitext(file.filename or "")[1] or ".pdf"
+            new_name = uuid.uuid4().hex + ext
+            os.makedirs(DOCS_DIR, exist_ok=True)
+            with open(os.path.join(DOCS_DIR, new_name), "wb") as f:
+                shutil.copyfileobj(file.file, f)
+            sets += ["file_name = ?", "file_orig = ?"]
+            vals += [new_name, file.filename]
+        if sets:
+            vals.append(doc_id)
+            conn.execute(f"UPDATE vendor_docs SET {', '.join(sets)} WHERE id = ?", vals)
+    if file is not None and row["file_name"]:       # 이전 파일 삭제
+        try:
+            os.remove(os.path.join(DOCS_DIR, row["file_name"]))
+        except OSError:
+            pass
+    return {"ok": True}
+
+
 class DocOrder(BaseModel):
     ids: list[int]      # 새 순서대로의 문서 id 목록
 
