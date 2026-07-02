@@ -7,7 +7,10 @@ CREATE TABLE IF NOT EXISTS firewalls (
   vendor       TEXT    NOT NULL,
   alias        TEXT    NOT NULL,
   ip           TEXT    NOT NULL UNIQUE,             -- 🔑 매칭 키
-  mgmt_port    INTEGER NOT NULL DEFAULT 443,
+  mgmt_port    INTEGER NOT NULL DEFAULT 443,         -- (legacy) 관리 포트 = gui_port 와 동일하게 유지
+  api_port     INTEGER,                              -- REST API 포트
+  gui_port     INTEGER,                              -- 웹 콘솔(GUI) 포트
+  ssh_port     INTEGER DEFAULT 22,                   -- SSH 접속 포트
   version      TEXT,
   admin_id     TEXT,
   description  TEXT,                                -- 자유 메모/설명

@@ -38,6 +38,9 @@ _SECRET_COLS = {
 }
 _FIREWALL_COLS = {
     "description": "TEXT",
+    "api_port": "INTEGER",
+    "gui_port": "INTEGER",
+    "ssh_port": "INTEGER DEFAULT 22",
 }
 _VENDOR_DOCS_COLS = {
     "memo": "TEXT",

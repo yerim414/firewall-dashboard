@@ -432,6 +432,8 @@
     display: none; margin-left: 7px; font-size: 9px; font-weight: 800; letter-spacing: .06em;
     background: var(--down); color: #fff; border-radius: 5px; padding: 2px 5px; vertical-align: middle;
   }
+  .admin-badge.super { background: var(--down); }   /* Super Admin (전체 권한) */
+  .admin-badge.doc   { background: var(--primary); } /* Admin (문서만) */
   body.admin .admin-badge { display: inline-block; }
   .adm { display: none; }            /* 관리자 전용 요소 */
   body.admin .adm { display: inline-flex; }
@@ -462,6 +464,40 @@
   .db-sec-title { font-size: 13.5px; font-weight: 700; margin-bottom: 12px; }
   .db-sec-title span { font-weight: 500; color: var(--muted); font-size: 12px; }
 
+  /* ── 리스트/카드 보기 토글 ── */
+  .view-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .view-toolbar .vt-left { display: flex; align-items: center; gap: 10px; flex: 1; flex-wrap: wrap; min-width: 0; }
+  .vtoggle { display: inline-flex; gap: 2px; background: var(--chip); border-radius: 10px; padding: 3px; margin-left: auto; flex-shrink: 0; }
+  .vtoggle button { border: none; background: none; border-radius: 8px; width: 34px; height: 30px; cursor: pointer; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; }
+  .vtoggle button svg { width: 17px; height: 17px; }
+  .vtoggle button:hover { color: var(--text); }
+  .vtoggle button.on { background: var(--card); color: var(--primary); box-shadow: var(--shadow-sm); }
+
+  /* 장비 카드 그리드 */
+  .device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(238px, 1fr)); gap: 14px; }
+  .device-grid[hidden] { display: none; }   /* display:grid 가 기본 [hidden] 을 덮어써서 명시적으로 숨김 */
+  .dev-card { padding: 16px 18px; cursor: pointer; transition: transform .12s, box-shadow .12s; }
+  .dev-card:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(31,28,74,.10); }
+  .dev-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .dev-card-alias { font-weight: 700; font-size: 15px; margin-bottom: 3px; word-break: break-all; }
+  .dev-card-ip { color: var(--muted); font-family: 'Consolas', monospace; font-size: 12.5px; }
+  .dev-card-foot { margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .dev-card-ver { color: var(--muted); font-size: 12px; flex-shrink: 0; }
+
+  /* 서버 리스트(테이블) 확장 하위행 */
+  .srv-subrow > td { padding: 0 18px 14px; }
+  .srv-subrow:hover { background: none; }
+  tr.srv-subrow { cursor: default; border-top: none; }
+
+  /* 벤더 문서 리스트 보기 */
+  .doc-detail-list { display: flex; flex-direction: column; gap: 8px; }
+  .doc-lrow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 11px; padding: 12px 14px; }
+  .doc-lrow:hover { border-color: #d4dbe6; }
+  .doc-lrow-main { flex: 1; min-width: 0; }
+  .doc-lrow-title { font-weight: 700; font-size: 14.5px; word-break: break-all; }
+  .doc-lrow-act { display: inline-flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .doc-lrow .doc-guide, .doc-lrow .doc-memo { width: 100%; margin-top: 4px; }
+
   @media (max-width: 1080px) {
     .kpis { grid-template-columns: repeat(2, 1fr); }
     .dash-grid, .server-grid, .stat-grid { grid-template-columns: 1fr; }
@@ -478,15 +514,15 @@
   <aside class="sidebar">
     <div class="brand">
       <span class="logo" onclick="logoTap()" title=""><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 L28 6 V15 C28 23 22 28 16 30 C10 28 4 23 4 15 V6 Z" fill="#6c5ce7"/><circle cx="12" cy="14.5" r="2.3" fill="#fff"/><circle cx="20" cy="14.5" r="2.3" fill="#fff"/><path d="M12 19.5 Q16 23.5 20 19.5" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></span>
-      <span class="brand-name nl">방화벽 관리<span class="admin-badge">ADMIN</span></span>
+      <span class="brand-name nl">방화벽 관리<span class="admin-badge super" id="adminBadge">ADMIN</span></span>
     </div>
     <nav class="nav">
       <button class="nav-item active" data-view="devices" onclick="switchView('devices')" title="장비 목록">
         <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3.5" y1="6" x2="3.51" y2="6"/><line x1="3.5" y1="12" x2="3.51" y2="12"/><line x1="3.5" y1="18" x2="3.51" y2="18"/></svg></span><span class="nl">장비 목록</span></button>
       <button class="nav-item" data-view="servers" onclick="switchView('servers')" title="등록 서버">
         <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><line x1="6" y1="7" x2="6.01" y2="7"/><line x1="6" y1="17" x2="6.01" y2="17"/></svg></span><span class="nl">등록 서버</span></button>
-      <button class="nav-item" data-view="docs" onclick="switchView('docs')" title="API 문서">
-        <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span><span class="nl">API 문서</span></button>
+      <button class="nav-item" data-view="docs" onclick="switchView('docs')" title="벤더 문서">
+        <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span><span class="nl">벤더 문서</span></button>
       <button class="nav-item" data-view="stats" onclick="switchView('stats')" title="통계">
         <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="nl">통계</span></button>
     </nav>
@@ -526,12 +562,13 @@
         </select>
         <button class="ghost" onclick="resetFilters()">초기화</button>
         <button class="ghost" id="excelBtn" onclick="exportCsv()">엑셀 ⬇</button>
+        <span id="devViewToggle"></span>
       </div>
 
       <div class="row-2col">
         <aside class="card tree" id="tree"></aside>
         <div class="col">
-          <div class="card tablebox">
+          <div class="card tablebox" id="deviceTableBox">
             <table>
               <thead>
                 <tr>
@@ -549,6 +586,7 @@
             </table>
             <div class="empty" id="empty" style="display:none">검색 결과가 없습니다.</div>
           </div>
+          <div class="device-grid" id="deviceCards" hidden></div>
 
           <div class="pager">
             <div class="info" id="pageInfo"></div>
@@ -596,7 +634,7 @@
           <div id="vendorBars"></div>
         </div>
         <div class="card panel">
-          <h3>API 문서 제공 현황</h3>
+          <h3>벤더 문서 현황</h3>
           <div id="docStats"></div>
         </div>
       </div>
@@ -651,6 +689,7 @@ function mapFw(r) {
   return {
     id: r.id, vendor: r.vendor, ip: r.ip, alias: r.alias, version: r.version || '-',
     status: r.status, mgmtPort: r.mgmt_port, adminId: r.admin_id || '-',
+    apiPort: r.api_port || '', guiPort: r.gui_port || '', sshPort: r.ssh_port || '',
     description: r.description || '',
     expireDays: r.api_key_expire_days, lastSeen: r.last_seen_at || '—',
     apiAuth: r.status === 'down' ? '실패' : '성공',
@@ -667,7 +706,7 @@ async function loadFirewalls() {
 const VIEW_META = {
   devices:   { title: '장비 목록',  sub: '사내 테스트 방화벽 장비 전체' },
   servers:   { title: '등록 서버',  sub: '방화벽이 등록된 내부 서버 (API 키 보관처)' },
-  docs:      { title: 'API 문서',   sub: '벤더·버전별 REST API 문서' },
+  docs:      { title: '벤더 문서',  sub: '벤더별 API·GUI·매뉴얼 등 참고 문서' },
   stats:     { title: '통계',       sub: '상태 · 벤더 · 문서 분포' },
 };
 
@@ -680,15 +719,39 @@ const expandedServers = new Set();   // 비어있음 = 전부 접힘(기본)
 let serversCache = [];               // /api/servers 응답 캐시 (편집 모달용)
 const $ = (s) => document.querySelector(s);
 
-/* ── 관리자 모드 (로고 1.5초 내 5연타 + 비밀번호) ── */
-// ⚠️ 클라이언트 측 소프트 게이트 — 평문 대신 해시만 저장 (완벽한 보안 아님, 눈에 안 띄게 가림)
-const ADMIN_PW_HASH = '6335a3b5';
+/* ── 리스트/카드 보기 (뷰별로 기억) ── */
+const VIEW_MODES = { devices: 'list', servers: 'card', docs: 'card' };
+(function initViewModes() {
+  try { ['devices', 'servers', 'docs'].forEach(v => { const m = localStorage.getItem('fw-vm-' + v); if (m === 'list' || m === 'card') VIEW_MODES[v] = m; }); } catch (e) {}
+})();
+const VT_LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>';
+const VT_CARD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
+function viewToggle(v) {
+  const m = VIEW_MODES[v];
+  return `<div class="vtoggle">
+    <button class="${m === 'list' ? 'on' : ''}" title="리스트 보기" onclick="setViewMode('${v}','list')">${VT_LIST}</button>
+    <button class="${m === 'card' ? 'on' : ''}" title="카드 보기" onclick="setViewMode('${v}','card')">${VT_CARD}</button>
+  </div>`;
+}
+function setViewMode(v, m) {
+  if (VIEW_MODES[v] === m) return;
+  VIEW_MODES[v] = m;
+  try { localStorage.setItem('fw-vm-' + v, m); } catch (e) {}
+  render();
+}
+
+/* ── 관리자 모드 (로고 1.5초 내 5연타 + 비밀번호) ──
+   두 등급: super = 전체 권한 / doc = 벤더 문서만 편집
+   ⚠️ 클라이언트 측 소프트 게이트 — 평문 대신 해시만 저장 (완벽한 보안 아님, 눈에 안 띄게 가림) */
+const ADMIN_HASHES = { '6335a3b5': 'super', '633a06bd': 'doc' };
 function pwHash(s) {
   let h = 5381;
   for (let i = 0; i < s.length; i++) h = (Math.imul(h, 33) + s.charCodeAt(i)) >>> 0;
   return h.toString(16);
 }
-let adminMode = sessionStorage.getItem('fw-admin') === '1';
+let adminRole = sessionStorage.getItem('fw-role') || (sessionStorage.getItem('fw-admin') === '1' ? 'super' : '');
+let adminMode = adminRole !== '';        // 문서 편집 가능 (super·doc 공통)
+let superMode = adminRole === 'super';   // 장비·서버 관리 (super 전용)
 let logoClicks = 0, logoTimer = null;
 function logoTap() {
   logoClicks++;
@@ -696,23 +759,33 @@ function logoTap() {
   logoTimer = setTimeout(() => { logoClicks = 0; }, 1500);
   if (logoClicks < 5) return;
   logoClicks = 0;
-  if (adminMode) { setAdmin(false); return; }        // 끄는 건 비번 불필요
+  if (adminMode) { setAdmin(''); return; }            // 끄는 건 비번 불필요
   const pw = prompt('관리자 비밀번호');
   if (pw === null) return;                            // 취소
-  if (pwHash('fw-admin::' + pw) === ADMIN_PW_HASH) setAdmin(true);
+  const role = ADMIN_HASHES[pwHash('fw-admin::' + pw)];
+  if (role) setAdmin(role);
   else toast('비밀번호가 틀렸습니다');
 }
-function setAdmin(on) {
-  adminMode = on;
-  sessionStorage.setItem('fw-admin', on ? '1' : '0');
-  document.body.classList.toggle('admin', on);
-  updateAddBtn();                                     // 장비 추가 버튼은 관리자만
-  toast(on ? '🔓 관리자 모드 ON' : '🔒 관리자 모드 OFF');
+function applyAdminUi() {
+  document.body.classList.toggle('admin', adminMode);
+  document.body.classList.toggle('superadmin', superMode);
+  const badge = $('#adminBadge');
+  if (badge) { badge.textContent = superMode ? 'SUPER' : 'ADMIN'; badge.className = 'admin-badge ' + (superMode ? 'super' : 'doc'); }
+}
+function setAdmin(role) {
+  adminRole = role;
+  adminMode = role !== '';
+  superMode = role === 'super';
+  sessionStorage.setItem('fw-role', role);
+  sessionStorage.removeItem('fw-admin');              // 구 키 정리
+  applyAdminUi();
+  updateAddBtn();                                     // 장비 추가 버튼은 super 전용
+  toast(!adminMode ? '🔒 관리자 모드 OFF' : (superMode ? '🔓 Super Admin ON' : '🔓 문서 관리자 ON'));
   render();
   if (view === 'devices') closeDrawer();
 }
 function updateAddBtn() {
-  $('#addBtn').style.display = (view === 'devices' && adminMode) ? '' : 'none';
+  $('#addBtn').style.display = (view === 'devices' && superMode) ? '' : 'none';
 }
 let toastTimer = null;
 function toast(msg) {
@@ -747,6 +820,7 @@ async function renderServers() {
   try { servers = await api('/servers'); }
   catch (e) { $('#serverList').innerHTML = `<div class="empty">서버 정보를 불러오지 못했습니다: ${e.message}</div>`; return; }
   serversCache = servers;
+  const mode = VIEW_MODES.servers;
 
   const SI = {
     plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
@@ -754,8 +828,44 @@ async function renderServers() {
     edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>`,
     trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
   };
-  const admX = (sid, ip) => adminMode
+  const admX = (sid, ip) => superMode
     ? `<button class="adm-x danger" title="등록 해제" onclick="event.stopPropagation(); unregisterIp('${sid}','${ip}')">×</button>` : '';
+
+  // 리스트 보기 (테이블 + 클릭 시 하위행에 장비 펼침)
+  const serverListHtml = (list) => {
+    if (!list.length) return `<div class="card tablebox"><div class="empty">등록된 서버가 없습니다.</div></div>`;
+    const body = list.map(s => {
+      const collapsed = !expandedServers.has(s.id);
+      const dbInfo = s.db_type ? `${s.db_type}${s.last_synced_at ? ' · ' + s.last_synced_at.slice(5, 16) : ' · 미동기화'}` : '수동';
+      const actions = superMode ? `<span class="srv-actions">
+        ${s.db_type ? `<button class="adm-x" title="DB에서 동기화" onclick="event.stopPropagation(); syncServer('${s.id}')">${SI.sync}</button>` : ''}
+        <button class="adm-x" title="방화벽 IP 수동 등록" onclick="event.stopPropagation(); openRegPrompt('${s.id}')">${SI.plus}</button>
+        <button class="adm-x" title="서버·DB 편집" onclick="event.stopPropagation(); openServerModal('${s.id}')">${SI.edit}</button>
+        <button class="adm-x danger" title="서버 삭제" onclick="event.stopPropagation(); deleteServer('${s.id}')">${SI.trash}</button>
+      </span>` : '';
+      const devs = s.matched.map(d => `
+        <div class="srv-dev" onclick="event.stopPropagation(); openDrawer(${d.id})">
+          ${vendorBadge(d.vendor)}<span class="srv-dev-name">${d.alias}</span><span class="srv-dev-ip">${d.ip}</span>
+          <span style="margin-left:auto"></span>${admX(s.id, d.ip)}
+        </div>`).join('')
+        + s.orphan.map(ip => `
+        <div class="srv-dev orphan"><span class="srv-chip none">미관리</span><span class="srv-dev-ip">${ip}</span>
+          <span style="margin-left:auto"></span>${admX(s.id, ip)}</div>`).join('');
+      const sub = collapsed ? '' : `<tr class="srv-subrow"><td colspan="6"><div class="srv-devs">${devs || '<div class="srv-empty">서버 DB에 등록된 방화벽이 없습니다.</div>'}</div></td></tr>`;
+      return `<tr onclick="toggleServer('${s.id}')">
+        <td><span class="scaret" style="display:inline-block${collapsed ? '' : ';transform:rotate(90deg)'}">▸</span> <b>${s.name}</b> <span class="scode">${s.short}</span></td>
+        <td>${s.role || '-'}</td>
+        <td class="ip">${s.host}</td>
+        <td class="ver">${dbInfo}</td>
+        <td class="devcnt">${s.registered_count}대${s.orphan.length ? ` · 미매칭 ${s.orphan.length}` : ''}</td>
+        <td class="docact" onclick="event.stopPropagation()">${actions}</td>
+      </tr>${sub}`;
+    }).join('');
+    return `<div class="card tablebox"><table>
+      <thead><tr><th>서버</th><th>역할</th><th>호스트</th><th>DB · 동기화</th><th>등록</th><th></th></tr></thead>
+      <tbody>${body}</tbody>
+    </table></div>`;
+  };
 
   const cards = servers.map(s => {
     const collapsed = !expandedServers.has(s.id);
@@ -776,7 +886,7 @@ async function renderServers() {
       </div>`).join('');
     const dbBtn = s.db_type
       ? `<button class="adm-x" title="DB에서 동기화" onclick="event.stopPropagation(); syncServer('${s.id}')">${SI.sync}</button>` : '';
-    const adminHead = adminMode ? `<span class="srv-actions">
+    const adminHead = superMode ? `<span class="srv-actions">
       ${dbBtn}
       <button class="adm-x" title="방화벽 IP 수동 등록" onclick="event.stopPropagation(); openRegPrompt('${s.id}')">${SI.plus}</button>
       <button class="adm-x" title="서버·DB 편집" onclick="event.stopPropagation(); openServerModal('${s.id}')">${SI.edit}</button>
@@ -802,9 +912,11 @@ async function renderServers() {
       </div>`;
   }).join('');
 
-  const adminBar = adminMode
-    ? `<div class="srv-admin-bar"><button class="ghost" onclick="openAccountModal()">🔑 공통 DB 계정</button><button class="btn" onclick="openServerModal()">+ 서버 추가</button></div>` : '';
-  $('#serverList').innerHTML = adminBar + `<div class="server-grid">${cards}</div>`;
+  const adminBar = superMode
+    ? `<button class="ghost" onclick="openAccountModal()">🔑 공통 DB 계정</button><button class="btn" onclick="openServerModal()">+ 서버 추가</button>` : '';
+  $('#serverList').innerHTML =
+    `<div class="view-toolbar"><div class="vt-left">${adminBar}</div>${viewToggle('servers')}</div>`
+    + (mode === 'list' ? serverListHtml(servers) : `<div class="server-grid">${cards}</div>`);
 }
 function toggleServer(id) {
   expandedServers.has(id) ? expandedServers.delete(id) : expandedServers.add(id);
@@ -1019,34 +1131,58 @@ function getFiltered() {
   return rows;
 }
 
+function devCard(d) {
+  return `
+    <div class="card dev-card" onclick="openDrawer(${d.id})">
+      <div class="dev-card-top">
+        ${vendorBadge(d.vendor)}
+        <span class="pill ${d.status}">${STATUS_LABEL[d.status]}</span>
+      </div>
+      <div class="dev-card-alias">${escAttr(d.alias)}</div>
+      <div class="dev-card-ip">${d.ip}</div>
+      <div class="dev-card-foot">
+        <span class="srvcell">${serverChips(d)}</span>
+        <span class="dev-card-ver">${d.version}</span>
+      </div>
+    </div>`;
+}
 function renderDevices() {
+  const mode = VIEW_MODES.devices;
+  $('#devViewToggle').innerHTML = viewToggle('devices');
   const all = getFiltered();
   const totalPages = Math.max(1, Math.ceil(all.length / pageSize));
   if (page > totalPages) page = totalPages;
   const start = (page - 1) * pageSize;
   const rows = all.slice(start, start + pageSize);
 
-  $('#rows').innerHTML = rows.map(d => `
-    <tr onclick="openDrawer(${d.id})">
-      <td class="id">${d.id}</td>
-      <td>${vendorBadge(d.vendor)}</td>
-      <td class="ip">${d.ip}</td>
-      <td class="alias">${d.alias}</td>
-      <td class="ver">${d.version}</td>
-      <td><span class="pill ${d.status}">${STATUS_LABEL[d.status]}</span></td>
-      <td class="srvcell">${serverChips(d)}</td>
-      <td class="chev">›</td>
-    </tr>
-  `).join('');
+  $('#deviceTableBox').hidden = mode === 'card';
+  $('#deviceCards').hidden = mode !== 'card';
 
-  $('#empty').style.display = all.length ? 'none' : 'block';
-
-  document.querySelectorAll('thead th').forEach(th => {
-    if (!th.dataset.k) return;
-    th.classList.toggle('sorted', th.dataset.k === sortKey);
-    const arr = th.querySelector('.arr');
-    if (arr) arr.textContent = (th.dataset.k === sortKey) ? (sortDir === 1 ? '▴' : '▾') : '▾';
-  });
+  if (mode === 'card') {
+    $('#deviceCards').innerHTML = rows.length
+      ? rows.map(devCard).join('')
+      : `<div class="empty" style="grid-column:1/-1">검색 결과가 없습니다.</div>`;
+  } else {
+    $('#rows').innerHTML = rows.map(d => `
+      <tr onclick="openDrawer(${d.id})">
+        <td class="id">${d.id}</td>
+        <td>${vendorBadge(d.vendor)}</td>
+        <td class="ip">${d.ip}</td>
+        <td class="alias">${d.alias}</td>
+        <td class="ver">${d.version}</td>
+        <td><span class="pill ${d.status}">${STATUS_LABEL[d.status]}</span></td>
+        <td class="srvcell">${serverChips(d)}</td>
+        <td class="chev">›</td>
+      </tr>
+    `).join('');
+    $('#empty').style.display = all.length ? 'none' : 'block';
+    document.querySelectorAll('thead th').forEach(th => {
+      if (!th.dataset.k) return;
+      th.classList.toggle('sorted', th.dataset.k === sortKey);
+      const arr = th.querySelector('.arr');
+      if (arr) arr.textContent = (th.dataset.k === sortKey) ? (sortDir === 1 ? '▴' : '▾') : '▾';
+    });
+  }
 
   renderPager(all.length, totalPages, start, rows.length);
 }
@@ -1175,8 +1311,10 @@ async function openDrawer(id) {
   let d;
   try { d = mapFw(await api('/firewalls/' + id)); }
   catch (e) { alert('상세를 불러오지 못했습니다: ' + e.message); return; }
-  const webUrl = `https://${d.ip}${d.mgmtPort && d.mgmtPort !== 443 ? ':' + d.mgmtPort : ''}/`;
-  const sshUrl = `ssh://${d.adminId}@${d.ip}`;
+  const guiPort = d.guiPort || d.mgmtPort || 443;
+  const sshPort = d.sshPort || 22;
+  const webUrl = `https://${d.ip}${guiPort && +guiPort !== 443 ? ':' + guiPort : ''}/`;
+  const sshUrl = `ssh://${d.adminId === '-' ? '' : d.adminId + '@'}${d.ip}${+sshPort !== 22 ? ':' + sshPort : ''}`;
   $('#drawer').innerHTML = `
     <div class="dh">
       <div class="top">
@@ -1201,7 +1339,9 @@ async function openDrawer(id) {
       <div class="section">
         <h3>접속 정보</h3>
         <div class="field"><span class="k">관리 IP</span><span class="v mono">${d.ip}</span></div>
-        <div class="field"><span class="k">관리 포트</span><span class="v mono">${d.mgmtPort}</span></div>
+        <div class="field"><span class="k">GUI 포트</span><span class="v mono">${guiPort}</span></div>
+        <div class="field"><span class="k">SSH 포트</span><span class="v mono">${sshPort}</span></div>
+        <div class="field"><span class="k">API 포트</span><span class="v mono">${d.apiPort || '-'}</span></div>
         <div class="field"><span class="k">관리자 ID</span><span class="v mono">${d.adminId}</span></div>
         ${secretField('비밀번호', d.password || '')}
         ${(AUTH_METHODS[d.authMethod] || AUTH_METHODS.api_key).fields.map(f => {
@@ -1235,7 +1375,7 @@ async function openDrawer(id) {
         </div>
       </div>
 
-      ${adminMode ? `<div class="section" style="display:flex; gap:10px">
+      ${superMode ? `<div class="section" style="display:flex; gap:10px">
         <button class="ghost" style="flex:1" onclick="openEditModal(${d.id})">✏ 수정</button>
         <button class="ghost danger" style="flex:1" onclick="deleteDevice(${d.id})">🗑 삭제</button>
       </div>` : ''}
@@ -1301,20 +1441,22 @@ async function renderDocs() {
 
   // 우측: 선택 벤더 문서
   if (!docVendor) {
-    $('#docDetail').innerHTML = `<div class="empty">등록된 API 문서가 없습니다.${adminMode ? '' : '<br>(관리자 모드에서 문서를 추가할 수 있습니다)'}</div>`;
+    $('#docDetail').innerHTML = `<div class="empty">등록된 문서가 없습니다.${adminMode ? '' : '<br>(관리자 모드에서 문서를 추가할 수 있습니다)'}</div>`;
     return;
   }
   const items = byVendor[docVendor] || [];
+  const mode = VIEW_MODES.docs;
   const addBtn = adminMode ? `<button class="ghost sm" onclick="openDocModal('${docVendor}')">+ 문서 추가</button>` : '';
-  const body = items.length ? items.map(docRow).join('')
+  const renderRow = mode === 'list' ? docListRow : docRow;
+  const body = items.length ? items.map(renderRow).join('')
     : `<div class="empty">등록된 문서가 없습니다.${adminMode ? '<br>우측 상단 “+ 문서 추가”로 등록하세요.' : ''}</div>`;
   $('#docDetail').innerHTML = `
     <div class="doc-detail-head">
       <div>${vendorBadge(docVendor)} <span class="doc-detail-cnt">${items.length}건</span></div>
-      ${addBtn}
+      <div style="display:flex;align-items:center;gap:10px">${addBtn}${viewToggle('docs')}</div>
     </div>
-    <div class="doc-detail-body">${body}</div>`;
-  if (adminMode) setupDocDnd();
+    <div class="${mode === 'list' ? 'doc-detail-list' : 'doc-detail-body'}">${body}</div>`;
+  if (adminMode && mode === 'card') setupDocDnd();   // 드래그 정렬은 카드 보기에서만
 }
 function selectDocVendor(v) { docVendor = v; renderDocs(); }
 
@@ -1392,6 +1534,34 @@ function docRow(d) {
         ${action}
         ${adminMode ? `<button class="doc-foot-btn muted" onclick="openDocEditModal(${d.id})">수정</button>` : ''}
       </div>
+    </div>`;
+}
+function docListRow(d) {
+  const k = DOC_KIND[d.kind] || {};
+  let action = '';
+  if (d.kind === 'web' || d.kind === 'related') {
+    action = d.url ? `<a class="doc-foot-btn" href="${escAttr(d.url)}" target="_blank" rel="noopener">열기 ↗</a>` : `<span class="doc-foot-btn off">링크 없음</span>`;
+  } else if (d.kind === 'pdf') {
+    action = d.file_name ? `<a class="doc-foot-btn" href="/api/docs/files/${encodeURIComponent(d.file_name)}">다운로드 ⬇</a>` : `<span class="doc-foot-btn off">파일 없음</span>`;
+  } else if (d.kind === 'gui') {
+    action = `<button class="doc-foot-btn" onclick="toggleGuide(${d.id})">확인 방법 ▾</button>`;
+  }
+  const del = adminMode ? `<button class="adm-x danger" title="삭제" onclick="deleteDoc(${d.id})">×</button>` : '';
+  const editBtn = adminMode ? `<button class="doc-foot-btn muted" onclick="openDocEditModal(${d.id})">수정</button>` : '';
+  const guide = d.kind === 'gui' ? `<div class="doc-guide" id="guide-${d.id}" hidden>${escAttr(d.guide || '')}</div>` : '';
+  const memo = d.memo ? `<div class="doc-memo">${escAttr(d.memo)}</div>` : '';
+  let chip = k.badge || '문서';
+  if (d.kind === 'pdf' && d.file_orig) {
+    const ext = d.file_orig.split('.').pop().toUpperCase();
+    if (ext && ext.length <= 4) chip = ext;
+  }
+  const sub = (d.kind === 'pdf' && d.file_orig) ? `<span class="doc-file" style="margin:0 0 0 8px">${escAttr(d.file_orig)}</span>` : '';
+  return `
+    <div class="doc-lrow">
+      <span class="doc-chip ${d.kind}">${chip}</span>
+      <div class="doc-lrow-main"><span class="doc-lrow-title">${escAttr(d.title)}</span>${sub}</div>
+      <div class="doc-lrow-act">${action}${editBtn}${del}</div>
+      ${memo}${guide}
     </div>`;
 }
 function toggleGuide(id) { const el = document.getElementById('guide-' + id); if (el) el.hidden = !el.hidden; }
@@ -1557,18 +1727,19 @@ const AUTH_METHODS = {
   client_secret: { label: 'Client ID + Secret Key', fields: [{ key: 'client_id', label: 'Client ID' }, { key: 'secret_key', label: 'Secret Key', secret: true }] },
   userpass:      { label: 'API ID + 비밀번호',     fields: [{ key: 'api_user', label: 'API 사용자' }, { key: 'api_password', label: 'API 비밀번호', secret: true }] },
   token:         { label: 'Bearer Token',           fields: [{ key: 'token', label: 'Token', secret: true }] },
-  idpw_ports:    { label: '공통 ID/PW + API·SSH 포트', fields: [{ key: 'api_port', label: 'API 포트', placeholder: '443' }, { key: 'ssh_port', label: 'SSH 포트', placeholder: '22' }] },
-  idpw_apiport:  { label: '공통 ID/PW + API 포트', fields: [{ key: 'api_port', label: 'API 포트' }] },
   none:          { label: '공통 ID/PW만 (API 키 불필요)', fields: [] },
+  // legacy — 포트는 이제 장비 정보의 API/GUI/SSH 포트 필드로 이동. 옛 레코드 호환용(추가 인증필드 없음)
+  idpw_ports:    { label: '공통 ID/PW (포트는 장비 정보 참조)', fields: [] },
+  idpw_apiport:  { label: '공통 ID/PW (포트는 장비 정보 참조)', fields: [] },
 };
-// 벤더 → 기본 인증 방식 (미지정이면 api_key)
+// 벤더 → 기본 인증 방식 (미지정이면 api_key). 포트만 쓰던 벤더는 none (포트는 표준 필드)
 const VENDOR_AUTH = {
   Fortinet: 'api_key',
   Axgate: 'none',
   Bluemax: 'client_secret',
   Ahnlab: 'client_secret',
-  Paloalto: 'idpw_ports',
-  MF2: 'idpw_apiport',
+  Paloalto: 'none',
+  MF2: 'none',
   NexG: 'none',
   Future: 'none',
   WINS: 'api_key',
@@ -1619,7 +1790,9 @@ function openAddModal() {
         <label class="fld"><span>Alias *</span><input id="f_alias" placeholder="예: forti-test" autocomplete="off"></label>
         <label class="fld"><span>관리 IP *</span><input id="f_ip" placeholder="예: 192.168.0.1" autocomplete="off"></label>
         <label class="fld"><span>버전</span><input id="f_version" placeholder="예: 7.4.8" autocomplete="off"></label>
-        <label class="fld"><span>관리 포트</span><input id="f_port" type="number" value="443"></label>
+        <label class="fld"><span>GUI 포트 <span style="font-weight:400;color:var(--muted)">(웹 콘솔)</span></span><input id="f_guiport" type="number" value="443" placeholder="443"></label>
+        <label class="fld"><span>SSH 포트</span><input id="f_sshport" type="number" value="22" placeholder="22"></label>
+        <label class="fld"><span>API 포트 <span style="font-weight:400;color:var(--muted)">(선택)</span></span><input id="f_apiport" type="number" placeholder="예: 443"></label>
         <label class="fld"><span>관리자 ID</span><input id="f_admin" value="admin" autocomplete="off"></label>
         <label class="fld"><span>비밀번호</span><input id="f_pw" type="text" placeholder="콘솔/SSH 비밀번호" autocomplete="off"></label>
         <label class="fld full"><span>설명</span><input id="f_desc" placeholder="메모 (선택) — 예: 18층 서버실 · 담당자" autocomplete="off"></label>
@@ -1642,10 +1815,14 @@ async function submitAddDevice() {
   const ip = $('#f_ip').value.trim();
   if (!alias || !ip) { $('#f_err').textContent = 'Alias와 관리 IP는 필수 항목입니다.'; return; }
 
+  const guiPort = +$('#f_guiport').value || 443;
   const body = {
     vendor: $('#f_vendor').value,
     alias, ip,
-    mgmt_port: +$('#f_port').value || 443,
+    gui_port: guiPort,
+    mgmt_port: guiPort,                              // legacy 컬럼도 GUI 포트와 동일하게 유지
+    ssh_port: +$('#f_sshport').value || 22,
+    api_port: +$('#f_apiport').value || null,
     version: $('#f_version').value.trim() || null,
     admin_id: $('#f_admin').value.trim() || null,
     description: $('#f_desc').value.trim() || null,
@@ -1672,6 +1849,10 @@ async function openEditModal(id) {
   try { d = mapFw(await api('/firewalls/' + id)); }
   catch (e) { alert('불러오기 실패: ' + e.message); return; }
   const vopts = VENDOR_OPTIONS.map(v => `<option ${v === d.vendor ? 'selected' : ''}>${v}</option>`).join('');
+  // legacy(idpw_ports/idpw_apiport) 레코드는 포트가 auth 안에 있음 → 표준 필드로 끌어와 저장 시 이관
+  const guiPort = d.guiPort || d.mgmtPort || 443;
+  const sshPort = d.sshPort || (d.auth && d.auth.ssh_port) || 22;
+  const apiPort = d.apiPort || (d.auth && d.auth.api_port) || '';
   $('#addModal').innerHTML = `
     <div class="modal-head"><h2>장비 수정</h2><button class="close" onclick="closeAddModal()">×</button></div>
     <div class="modal-body">
@@ -1680,7 +1861,9 @@ async function openEditModal(id) {
         <label class="fld"><span>Alias *</span><input id="f_alias" value="${escAttr(d.alias)}" autocomplete="off"></label>
         <label class="fld"><span>관리 IP *</span><input id="f_ip" value="${escAttr(d.ip)}" autocomplete="off"></label>
         <label class="fld"><span>버전</span><input id="f_version" value="${escAttr(d.version === '-' ? '' : d.version)}" autocomplete="off"></label>
-        <label class="fld"><span>관리 포트</span><input id="f_port" type="number" value="${d.mgmtPort}"></label>
+        <label class="fld"><span>GUI 포트 <span style="font-weight:400;color:var(--muted)">(웹 콘솔)</span></span><input id="f_guiport" type="number" value="${escAttr(guiPort)}"></label>
+        <label class="fld"><span>SSH 포트</span><input id="f_sshport" type="number" value="${escAttr(sshPort)}"></label>
+        <label class="fld"><span>API 포트 <span style="font-weight:400;color:var(--muted)">(선택)</span></span><input id="f_apiport" type="number" value="${escAttr(apiPort)}"></label>
         <label class="fld"><span>관리자 ID</span><input id="f_admin" value="${escAttr(d.adminId === '-' ? '' : d.adminId)}" autocomplete="off"></label>
         <label class="fld"><span>비밀번호</span><input id="f_pw" type="text" value="${escAttr(d.password)}" autocomplete="off"></label>
         <label class="fld full"><span>설명</span><input id="f_desc" value="${escAttr(d.description)}" placeholder="메모 (선택)" autocomplete="off"></label>
@@ -1695,9 +1878,13 @@ async function openEditModal(id) {
 async function submitEditDevice(id) {
   const alias = $('#f_alias').value.trim(), ip = $('#f_ip').value.trim();
   if (!alias || !ip) { $('#f_err').textContent = 'Alias와 관리 IP는 필수 항목입니다.'; return; }
+  const guiPort = +$('#f_guiport').value || 443;
   const body = {
     vendor: $('#f_vendor').value, alias, ip,
-    mgmt_port: +$('#f_port').value || 443,
+    gui_port: guiPort,
+    mgmt_port: guiPort,
+    ssh_port: +$('#f_sshport').value || 22,
+    api_port: +$('#f_apiport').value || null,
     version: $('#f_version').value.trim() || null,
     admin_id: $('#f_admin').value.trim() || null,
     description: $('#f_desc').value.trim() || null,
@@ -1768,7 +1955,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDrawe
 
 /* ── 부팅: API에서 장비 로드 후 렌더 ── */
 async function boot() {
-  if (adminMode) document.body.classList.add('admin');
+  applyAdminUi();
   try {
     await loadFirewalls();
   } catch (e) {
